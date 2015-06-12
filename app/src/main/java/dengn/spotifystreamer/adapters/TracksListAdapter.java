@@ -16,6 +16,7 @@ import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.utils.ImageUtils;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Pager;
+import kaaes.spotify.webapi.android.models.Tracks;
 
 /**
  * Created by OLEDCOMM on 12/06/2015.
@@ -25,18 +26,18 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private Context mContext;
     private LayoutInflater mLayoutInflater;
 
-    private Pager<Artist> mArtists;
+    private Tracks mTracks;
 
-    public TracksListAdapter(Context context, Pager<Artist> artists) {
+    public TracksListAdapter(Context context, Tracks tracks) {
 
         mContext = context;
         mLayoutInflater = LayoutInflater.from(context);
 
-        mArtists = artists;
+        mTracks = tracks;
     }
 
-    public void refresh(Pager<Artist> artists) {
-        mArtists = artists;
+    public void refresh(Tracks tracks) {
+        mTracks = tracks;
         notifyDataSetChanged();
     }
 
@@ -44,20 +45,21 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        return new ArtistItemViewHolder(mLayoutInflater.inflate(R.layout.artist_item, parent, false));
+        return new TracksItemViewHolder(mLayoutInflater.inflate(R.layout.artist_item, parent, false));
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         //Bind data to view
-        ((ArtistItemViewHolder) holder).artistName.setText(mArtists.items.get(position).name);
-        if(mArtists.items.get(position).images!=null && mArtists.items.size()!=0) {
+        if (mTracks.tracks.get(position).name != null)
+            ((TracksItemViewHolder) holder).trackName.setText(mTracks.tracks.get(position).name);
+        if (mTracks.tracks.get(position).album.images != null && mTracks.tracks.get(position).album.images.size() != 0) {
             Picasso.with(mContext)
-                    .load(ImageUtils.getImageUrl(mArtists.items.get(position).images, ImageUtils.IMAGE_SMALL))
+                    .load(ImageUtils.getImageUrl(mTracks.tracks.get(position).album.images, ImageUtils.IMAGE_SMALL))
                     .placeholder(R.drawable.no_image)
                     .error(R.drawable.no_image)
-                    .into(((ArtistItemViewHolder) holder).artistImg);
+                    .into(((TracksItemViewHolder) holder).trackImg);
         }
 
 
@@ -65,18 +67,18 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemCount() {
-        return mArtists.items == null ? 0 : mArtists.items.size();
+        return mTracks.tracks == null ? 0 : mTracks.tracks.size();
     }
 
-    public static class ArtistItemViewHolder extends RecyclerView.ViewHolder {
+    public static class TracksItemViewHolder extends RecyclerView.ViewHolder {
         @InjectView(R.id.artist_img)
-        ImageView artistImg;
+        ImageView trackImg;
 
         @InjectView(R.id.artist_name)
-        TextView artistName;
+        TextView trackName;
 
 
-        ArtistItemViewHolder(View view) {
+        TracksItemViewHolder(View view) {
             super(view);
             ButterKnife.inject(this, view);
         }
