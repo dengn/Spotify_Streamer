@@ -20,7 +20,7 @@
         </activity>
         <activity
             android:name=".activities.TracksActivity"
-            android:label="@string/title_activity_tracks" >
+            android:label="@string/title_activity_tracks">
         </activity>
     </application>
 

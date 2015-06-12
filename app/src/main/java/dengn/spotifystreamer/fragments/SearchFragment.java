@@ -1,10 +1,13 @@
 package dengn.spotifystreamer.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -16,7 +19,9 @@ import android.widget.Toast;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.activities.TracksActivity;
 import dengn.spotifystreamer.adapters.ArtistListAdapter;
+import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -33,6 +38,9 @@ public class SearchFragment extends Fragment {
 
 
     //UI components
+    @InjectView(R.id.search_toolbar)
+    Toolbar searchToolbar;
+
     @InjectView(R.id.search_text)
     TextInputLayout searchText;
 
@@ -59,6 +67,8 @@ public class SearchFragment extends Fragment {
 
     }
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -68,12 +78,26 @@ public class SearchFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
+        ((AppCompatActivity)getActivity()).setSupportActionBar(searchToolbar);
+        //((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         Pager<Artist> artists = new Pager<>();
         mResults.artists = artists;
 
         artistList.setLayoutManager(new LinearLayoutManager(getActivity()));
         artistListAdapter = new ArtistListAdapter(getActivity(), mResults.artists);
         artistList.setAdapter(artistListAdapter);
+
+        artistList.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(View view, int position) {
+                Intent intent = new Intent(getActivity(), TracksActivity.class);
+                intent.putExtra("artistId", mResults.artists.items.get(position).id);
+                intent.putExtra("artistName", mResults.artists.items.get(position).name);
+                startActivity(intent);
+            }
+        }));
 
         setUpSearchText();
 

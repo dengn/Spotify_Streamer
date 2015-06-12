@@ -1,24 +1,34 @@
 package dengn.spotifystreamer.activities;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import dengn.spotifystreamer.R;
-import dengn.spotifystreamer.fragments.SearchFragment;
+import dengn.spotifystreamer.fragments.TracksFragment;
 
 public class TracksActivity extends AppCompatActivity {
+
+    private String mArtistId;
+    private String mArtistName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracks);
 
+        Intent intent = getIntent();
+        mArtistId = intent.getStringExtra("artistId");
+        mArtistName = intent.getStringExtra("artistName");
+//        setSupportActionBar(toolbar);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.search_main, SearchFragment.newInstance());
+            transaction.replace(R.id.tracks_main, TracksFragment.newInstance(mArtistId, mArtistName));
             transaction.commit();
         }
     }
@@ -40,6 +50,10 @@ public class TracksActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }
+        else if(id==R.id.home){
+            finish();
             return true;
         }
 
