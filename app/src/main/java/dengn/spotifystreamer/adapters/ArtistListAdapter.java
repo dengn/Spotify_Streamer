@@ -10,11 +10,16 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.models.MyArtist;
 import dengn.spotifystreamer.utils.ImageUtils;
 import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.Pager;
 
 /**
@@ -25,9 +30,9 @@ public class ArtistListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private Context mContext;
     private LayoutInflater mLayoutInflater;
 
-    private Pager<Artist> mArtists;
+    private ArrayList<MyArtist> mArtists;
 
-    public ArtistListAdapter(Context context, Pager<Artist> artists) {
+    public ArtistListAdapter(Context context, ArrayList<MyArtist> artists) {
 
         mContext = context;
         mLayoutInflater = LayoutInflater.from(context);
@@ -35,7 +40,7 @@ public class ArtistListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mArtists = artists;
     }
 
-    public void refresh(Pager<Artist> artists) {
+    public void refresh(ArrayList<MyArtist> artists) {
         mArtists = artists;
         notifyDataSetChanged();
     }
@@ -51,12 +56,17 @@ public class ArtistListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         //Bind data to view
-        ((ArtistItemViewHolder) holder).artistName.setText(mArtists.items.get(position).name);
-        if(mArtists.items.get(position).images!=null && mArtists.items.size()!=0) {
+        if (mArtists.get(position).name != null)
+            ((ArtistItemViewHolder) holder).artistName.setText(mArtists.get(position).name);
+        if(mArtists.get(position).imageURL!=null && mArtists.size()!=0) {
             Picasso.with(mContext)
-                    .load(ImageUtils.getImageUrl(mArtists.items.get(position).images, ImageUtils.IMAGE_SMALL))
+                    .load(mArtists.get(position).imageURL)
                     .placeholder(R.drawable.no_image)
                     .error(R.drawable.no_image)
+                    .into(((ArtistItemViewHolder) holder).artistImg);
+        } else{
+            Picasso.with(mContext)
+                    .load(R.drawable.no_image)
                     .into(((ArtistItemViewHolder) holder).artistImg);
         }
 
@@ -65,7 +75,7 @@ public class ArtistListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemCount() {
-        return mArtists.items == null ? 0 : mArtists.items.size();
+        return mArtists == null ? 0 : mArtists.size();
     }
 
     public static class ArtistItemViewHolder extends RecyclerView.ViewHolder {

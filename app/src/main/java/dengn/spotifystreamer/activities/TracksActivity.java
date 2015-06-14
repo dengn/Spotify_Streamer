@@ -4,13 +4,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.fragments.SearchFragment;
 import dengn.spotifystreamer.fragments.TracksFragment;
+import dengn.spotifystreamer.utils.DebugConfig;
 
 public class TracksActivity extends AppCompatActivity {
+
+    private TracksFragment mTracksFragment;
 
     private String mArtistId;
     private String mArtistName;
@@ -28,8 +33,23 @@ public class TracksActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.tracks_main, TracksFragment.newInstance(mArtistId, mArtistName));
+            mTracksFragment = TracksFragment.newInstance(mArtistId, mArtistName);
+            transaction.replace(R.id.tracks_main, mTracksFragment);
             transaction.commit();
+        }
+        else{
+            mTracksFragment = (TracksFragment)getSupportFragmentManager().getFragment(
+                    savedInstanceState, "tracks_fragment");
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //Save the fragment's instance
+        // fragment instance may be null
+        if (mTracksFragment != null) {
+            getSupportFragmentManager().putFragment(outState, "tracks_fragment", mTracksFragment);
         }
     }
 
@@ -52,7 +72,9 @@ public class TracksActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-        else if(id==R.id.home){
+        else if(id==android.R.id.home){
+            if(DebugConfig.DEBUG)
+                Log.d(DebugConfig.TAG, "back clicked");
             finish();
             return true;
         }

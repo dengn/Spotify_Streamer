@@ -10,9 +10,12 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.ImageUtils;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Pager;
@@ -26,9 +29,9 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private Context mContext;
     private LayoutInflater mLayoutInflater;
 
-    private Tracks mTracks;
+    private ArrayList<MyTrack> mTracks;
 
-    public TracksListAdapter(Context context, Tracks tracks) {
+    public TracksListAdapter(Context context, ArrayList<MyTrack> tracks) {
 
         mContext = context;
         mLayoutInflater = LayoutInflater.from(context);
@@ -36,7 +39,7 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mTracks = tracks;
     }
 
-    public void refresh(Tracks tracks) {
+    public void refresh(ArrayList<MyTrack> tracks) {
         mTracks = tracks;
         notifyDataSetChanged();
     }
@@ -45,21 +48,29 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        return new TracksItemViewHolder(mLayoutInflater.inflate(R.layout.artist_item, parent, false));
+        return new TracksItemViewHolder(mLayoutInflater.inflate(R.layout.track_item, parent, false));
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         //Bind data to view
-        if (mTracks.tracks.get(position).name != null)
-            ((TracksItemViewHolder) holder).trackName.setText(mTracks.tracks.get(position).name);
-        if (mTracks.tracks.get(position).album.images != null && mTracks.tracks.get(position).album.images.size() != 0) {
+        if (mTracks.get(position).name != null)
+            ((TracksItemViewHolder) holder).trackName.setText(mTracks.get(position).name);
+        if(mTracks.get(position).albumName!=null){
+            ((TracksItemViewHolder) holder).trackAlbumName.setText(mTracks.get(position).albumName);
+        }
+        if (mTracks.get(position).imageSmallURL != null && mTracks.size() != 0) {
             Picasso.with(mContext)
-                    .load(ImageUtils.getImageUrl(mTracks.tracks.get(position).album.images, ImageUtils.IMAGE_SMALL))
+                    .load(mTracks.get(position).imageSmallURL)
                     .placeholder(R.drawable.no_image)
                     .error(R.drawable.no_image)
                     .into(((TracksItemViewHolder) holder).trackImg);
+        }
+        else{
+            Picasso.with(mContext)
+                    .load(R.drawable.no_image)
+                    .into(((TracksItemViewHolder)holder).trackImg);
         }
 
 
@@ -67,16 +78,18 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemCount() {
-        return mTracks.tracks == null ? 0 : mTracks.tracks.size();
+        return mTracks == null ? 0 : mTracks.size();
     }
 
     public static class TracksItemViewHolder extends RecyclerView.ViewHolder {
-        @InjectView(R.id.artist_img)
+        @InjectView(R.id.track_img)
         ImageView trackImg;
 
-        @InjectView(R.id.artist_name)
+        @InjectView(R.id.track_name)
         TextView trackName;
 
+        @InjectView(R.id.track_album_name)
+        TextView trackAlbumName;
 
         TracksItemViewHolder(View view) {
             super(view);

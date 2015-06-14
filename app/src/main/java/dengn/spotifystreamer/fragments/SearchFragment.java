@@ -1,7 +1,9 @@
 package dengn.spotifystreamer.fragments;
 
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -10,11 +12,15 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -22,8 +28,12 @@ import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.activities.TracksActivity;
 import dengn.spotifystreamer.adapters.ArtistListAdapter;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
+import dengn.spotifystreamer.models.MyArtist;
+import dengn.spotifystreamer.utils.DebugConfig;
+import dengn.spotifystreamer.utils.ImageUtils;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Pager;
@@ -50,8 +60,7 @@ public class SearchFragment extends Fragment {
     //Adapter
     private ArtistListAdapter artistListAdapter;
 
-    private ArtistsPager mResults = new ArtistsPager();
-
+    private ArrayList<MyArtist> mArtists = new ArrayList<>();
     //Spotify
     SpotifyApi api = new SpotifyApi();
     SpotifyService spotify = api.getService();
@@ -68,34 +77,65 @@ public class SearchFragment extends Fragment {
     }
 
 
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save the fragment's state here
+
+        if (DebugConfig.DEBUG)
+            Log.d(DebugConfig.TAG, "save data to bundle");
+        if (mArtists != null) {
+            outState.putParcelableArrayList("artists", mArtists);
+        }
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setRetainInstance(true);
+
+
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        if (savedInstanceState != null) {
+            // Restore the fragment's state here
+            mArtists = savedInstanceState.getParcelableArrayList("artists");
+
+            if (DebugConfig.DEBUG)
+                Log.d(DebugConfig.TAG, "get data from saved bundle");
+        }
 
         //Ui init
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
         ButterKnife.inject(this, view);
 
-        ((AppCompatActivity)getActivity()).setSupportActionBar(searchToolbar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(searchToolbar);
         //((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Pager<Artist> artists = new Pager<>();
-        mResults.artists = artists;
 
         artistList.setLayoutManager(new LinearLayoutManager(getActivity()));
-        artistListAdapter = new ArtistListAdapter(getActivity(), mResults.artists);
+        artistListAdapter = new ArtistListAdapter(getActivity(), mArtists);
         artistList.setAdapter(artistListAdapter);
 
         artistList.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
 
+
             @Override
             public void onItemClick(View view, int position) {
-                Intent intent = new Intent(getActivity(), TracksActivity.class);
-                intent.putExtra("artistId", mResults.artists.items.get(position).id);
-                intent.putExtra("artistName", mResults.artists.items.get(position).name);
-                startActivity(intent);
+
+                if (mArtists.get(position).id != null) {
+
+                    Intent intent = new Intent(getActivity(), TracksActivity.class);
+                    intent.putExtra("artistId", mArtists.get(position).id);
+                    intent.putExtra("artistName", mArtists.get(position).name);
+                    startActivity(intent);
+                }
             }
         }));
 
@@ -124,7 +164,9 @@ public class SearchFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 String artistName = s.toString();
-                spotifySearchArtists(artistName);
+                if (artistName.length() > 1)
+                    spotifySearchArtists(artistName);
+
             }
         });
     }
@@ -133,7 +175,7 @@ public class SearchFragment extends Fragment {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
+                Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -143,14 +185,29 @@ public class SearchFragment extends Fragment {
         spotify.searchArtists(artistName, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
-                mResults = artistsPager;
+
+                if (artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
+
+                    if (DebugConfig.DEBUG)
+                        Log.d(DebugConfig.TAG, "no artists found");
+
+                    MyArtist artist = new MyArtist(getString(R.string.artists_not_found), null, null);
+                    mArtists.clear();
+                    mArtists.add(artist);
+                } else {
+                    mArtists.clear();
+                    for (Artist item : artistsPager.artists.items) {
+                        MyArtist artist = new MyArtist(item.name, ImageUtils.getImageUrl(item.images, ImageUtils.IMAGE_SMALL), item.id);
+                        mArtists.add(artist);
+                    }
+                }
 
                 //Bind data to list and show
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        artistListAdapter.refresh(mResults.artists);
+                        artistListAdapter.refresh(mArtists);
 
                     }
                 });
@@ -159,15 +216,14 @@ public class SearchFragment extends Fragment {
             @Override
             public void failure(RetrofitError error) {
 
-
+                mArtists.clear();
                 //Error happens, Clear the list
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        Pager<Artist> artists = new Pager<>();
-                        mResults.artists = artists;
-                        artistListAdapter.refresh(mResults.artists);
+
+                        artistListAdapter.refresh(mArtists);
 
                     }
                 });
