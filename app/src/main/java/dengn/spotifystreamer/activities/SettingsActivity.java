@@ -15,7 +15,11 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import dengn.spotifystreamer.R;
 
@@ -36,9 +40,14 @@ import java.util.List;
 public class SettingsActivity extends PreferenceActivity {
 
 
+    private Toolbar toolbar;
+
    @Override
    public void onCreate(Bundle savedInstanceState){
        super.onCreate(savedInstanceState);
+
+       prepareLayout();
+
        // Add 'general' preferences, defined in the XML file
        addPreferencesFromResource(R.xml.pref_general);
 
@@ -46,6 +55,26 @@ public class SettingsActivity extends PreferenceActivity {
        // updated when the preference changes.
        bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_country_key)));
    }
+
+    private void prepareLayout() {
+        ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
+        View content = root.getChildAt(0);
+        LinearLayout toolbarContainer = (LinearLayout) View.inflate(this, R.layout.activity_settings, null);
+
+        root.removeAllViews();
+        toolbarContainer.addView(content);
+        root.addView(toolbarContainer);
+
+        toolbar = (Toolbar) toolbarContainer.findViewById(R.id.toolbar);
+        toolbar.setTitle(getTitle());
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
