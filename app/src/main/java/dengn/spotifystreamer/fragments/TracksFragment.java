@@ -27,6 +27,7 @@ import dengn.spotifystreamer.models.MyArtist;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
+import dengn.spotifystreamer.utils.SettingUtils;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
@@ -127,7 +128,8 @@ public class TracksFragment extends Fragment {
 
         if (reload) {
             Map<String, Object> options = new HashMap<>();
-            options.put("country", "se");
+            String countryCode = SettingUtils.getPreferredCountry(getActivity());
+            options.put("country", countryCode);
             spotify.getArtistTopTrack(mArtistId, options, new Callback<Tracks>() {
 
                 @Override

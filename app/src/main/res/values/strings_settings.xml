@@ -1,0 +1,23 @@
+<resources>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+
+    <string name="pref_country_label">Country</string>
+    <string name="pref_country_key">country</string>
+    <string name="pref_country_default">US</string>
+
+    <string-array name="pref_list_countries">
+        <item>US</item>
+        <item>France</item>
+        <item>China</item>
+    </string-array>
+    <string-array name="pref_list_countries_values">
+        <item>US</item>
+        <item>FR</item>
+        <item>CH</item>
+    </string-array>
+
+
+</resources>
