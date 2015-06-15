@@ -52,6 +52,7 @@ public class TracksFragment extends Fragment {
 
     private boolean reload = true;
 
+
     //Spotify
     SpotifyApi api = new SpotifyApi();
     SpotifyService spotify = api.getService();
@@ -143,14 +144,16 @@ public class TracksFragment extends Fragment {
                         }
                     }
                     //Bind data to list and show
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressBar.setVisibility(View.INVISIBLE);
-                            mTracksListAdapter.refresh(mTracks);
+                    if(isAdded()) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressBar.setVisibility(View.INVISIBLE);
+                                mTracksListAdapter.refresh(mTracks);
 
-                        }
-                    });
+                            }
+                        });
+                    }
                 }
 
                 @Override
@@ -158,15 +161,17 @@ public class TracksFragment extends Fragment {
 
                     mTracks.clear();
                     //Error happens, Clear the list
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+                    if(isAdded()) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
 
-                            progressBar.setVisibility(View.INVISIBLE);
-                            mTracksListAdapter.refresh(mTracks);
+                                progressBar.setVisibility(View.INVISIBLE);
+                                mTracksListAdapter.refresh(mTracks);
 
-                        }
-                    });
+                            }
+                        });
+                    }
                     switch (error.getKind()) {
                         case NETWORK:
                             showToast("Nwtwork error");
@@ -192,12 +197,16 @@ public class TracksFragment extends Fragment {
         return view;
     }
 
+
+
     private void showToast(final String msg) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
-            }
-        });
+        if(isAdded()) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
+                }
+            });
+        }
     }
 }
