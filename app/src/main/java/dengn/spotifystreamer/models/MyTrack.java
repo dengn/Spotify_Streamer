@@ -8,6 +8,8 @@ import android.os.Parcelable;
  */
 public class MyTrack implements Parcelable {
 
+    public static final int PREVIEW_LENGTH_DEFAULT = 30;
+
     public String name;
     public String albumName;
     public String imageLargeURL;
@@ -44,7 +46,7 @@ public class MyTrack implements Parcelable {
         this.previewURL = in.readString();
     }
 
-    public static final Parcelable.Creator<MyTrack> CREATOR = new Parcelable.Creator<MyTrack>() {
+    public static final Creator<MyTrack> CREATOR = new Creator<MyTrack>() {
         public MyTrack createFromParcel(Parcel source) {
             return new MyTrack(source);
         }

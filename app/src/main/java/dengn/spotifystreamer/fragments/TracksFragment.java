@@ -1,5 +1,6 @@
 package dengn.spotifystreamer.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,7 +19,9 @@ import java.util.Map;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.activities.PlayerActivity;
 import dengn.spotifystreamer.adapters.TracksListAdapter;
+import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
@@ -119,6 +122,24 @@ public class TracksFragment extends Fragment {
         mTracksListAdapter = new TracksListAdapter(getActivity(), mTracks);
         trackList.setAdapter(mTracksListAdapter);
 
+        trackList.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                if (mTracks.get(position).previewURL != null) {
+
+                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                    intent.putExtra("artist_name", mArtistName);
+                    intent.putExtra("album_name", mTracks.get(position).albumName);
+                    intent.putExtra("track_name", mTracks.get(position).name);
+                    intent.putExtra("task_duration", MyTrack.PREVIEW_LENGTH_DEFAULT);
+                    intent.putExtra("track_preview", mTracks.get(position).previewURL);
+                    intent.putExtra("album_image", mTracks.get(position).imageLargeURL);
+
+                    startActivity(intent);
+                }
+            }
+        }));
+
         if (reload) {
 
             progressBar.setVisibility(View.VISIBLE);
@@ -139,7 +160,7 @@ public class TracksFragment extends Fragment {
                     } else {
                         mTracks.clear();
                         for (Track item : tracks.tracks) {
-                            MyTrack track = new MyTrack(item.name, item.album.name, ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_BIG), ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_SMALL), item.preview_url);
+                            MyTrack track = new MyTrack(item.name, item.album.name, ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_MEDIUM), ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_SMALL), item.preview_url);
                             mTracks.add(track);
                         }
                     }

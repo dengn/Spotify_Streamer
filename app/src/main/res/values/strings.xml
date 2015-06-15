@@ -9,4 +9,5 @@
 
     <string name="artists_not_found">Please refine your search</string>
     <string name="tracks_not_found">No tracks found for your search</string>
+    <string name="title_activity_player">PlayerActivity</string>
 </resources>
