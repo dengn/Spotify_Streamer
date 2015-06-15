@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -39,6 +40,8 @@ public class TracksFragment extends Fragment {
     @InjectView(R.id.track_list)
     RecyclerView trackList;
 
+    @InjectView(R.id.tracks_progressbar)
+    ProgressBar progressBar;
 
     private String mArtistId;
     private String mArtistName;
@@ -107,6 +110,8 @@ public class TracksFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
+        progressBar.setIndeterminate(true);
+        progressBar.setVisibility(View.INVISIBLE);
 
 
         trackList.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -114,6 +119,9 @@ public class TracksFragment extends Fragment {
         trackList.setAdapter(mTracksListAdapter);
 
         if (reload) {
+
+            progressBar.setVisibility(View.VISIBLE);
+
             Map<String, Object> options = new HashMap<>();
             String countryCode = SettingUtils.getPreferredCountry(getActivity());
             options.put("country", countryCode);
@@ -138,7 +146,7 @@ public class TracksFragment extends Fragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
+                            progressBar.setVisibility(View.INVISIBLE);
                             mTracksListAdapter.refresh(mTracks);
 
                         }
@@ -149,6 +157,16 @@ public class TracksFragment extends Fragment {
                 public void failure(RetrofitError error) {
 
                     mTracks.clear();
+                    //Error happens, Clear the list
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            progressBar.setVisibility(View.INVISIBLE);
+                            mTracksListAdapter.refresh(mTracks);
+
+                        }
+                    });
                     switch (error.getKind()) {
                         case NETWORK:
                             showToast("Nwtwork error");

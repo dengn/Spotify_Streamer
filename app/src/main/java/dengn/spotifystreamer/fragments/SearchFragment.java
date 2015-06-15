@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -48,6 +49,9 @@ public class SearchFragment extends Fragment {
 
     @InjectView(R.id.artist_list)
     RecyclerView artistList;
+
+    @InjectView(R.id.search_progressbar)
+    ProgressBar progressBar;
 
     //Adapter
     private ArtistListAdapter artistListAdapter;
@@ -107,8 +111,8 @@ public class SearchFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
-
-
+        progressBar.setIndeterminate(true);
+        progressBar.setVisibility(View.INVISIBLE);
 
 
         artistList.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -156,8 +160,10 @@ public class SearchFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 String artistName = s.toString();
-                if (artistName.length() > 1)
+                if (artistName.length() > 1) {
                     spotifySearchArtists(artistName);
+                    progressBar.setVisibility(View.VISIBLE);
+                }
 
             }
         });
@@ -177,6 +183,8 @@ public class SearchFragment extends Fragment {
         spotify.searchArtists(artistName, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
+
+
 
                 if (artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
 
@@ -198,7 +206,7 @@ public class SearchFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
+                        progressBar.setVisibility(View.INVISIBLE);
                         artistListAdapter.refresh(mArtists);
 
                     }
@@ -208,13 +216,14 @@ public class SearchFragment extends Fragment {
             @Override
             public void failure(RetrofitError error) {
 
+
                 mArtists.clear();
                 //Error happens, Clear the list
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-
+                        progressBar.setVisibility(View.INVISIBLE);
                         artistListAdapter.refresh(mArtists);
 
                     }
