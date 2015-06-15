@@ -1,12 +1,9 @@
 package dengn.spotifystreamer.fragments;
 
-import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,15 +12,12 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
-import dengn.spotifystreamer.adapters.ArtistListAdapter;
 import dengn.spotifystreamer.adapters.TracksListAdapter;
-import dengn.spotifystreamer.models.MyArtist;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
@@ -45,8 +39,6 @@ public class TracksFragment extends Fragment {
     @InjectView(R.id.track_list)
     RecyclerView trackList;
 
-    @InjectView(R.id.toolbar)
-    Toolbar toolbar;
 
     private String mArtistId;
     private String mArtistName;
@@ -115,12 +107,7 @@ public class TracksFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
-        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        //((AppCompatActivity) getActivity()).getSupportActionBar().setHomeButtonEnabled(true);
 
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Top 10 Tracks");
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setSubtitle(mArtistName);
 
         trackList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mTracksListAdapter = new TracksListAdapter(getActivity(), mTracks);

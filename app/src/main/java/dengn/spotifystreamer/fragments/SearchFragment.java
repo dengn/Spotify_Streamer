@@ -1,15 +1,11 @@
 package dengn.spotifystreamer.fragments;
 
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -20,7 +16,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -33,10 +28,8 @@ import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
-import kaaes.spotify.webapi.android.models.Pager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -48,8 +41,7 @@ public class SearchFragment extends Fragment {
 
 
     //UI components
-    @InjectView(R.id.search_toolbar)
-    Toolbar searchToolbar;
+
 
     @InjectView(R.id.search_text)
     TextInputLayout searchText;
@@ -115,8 +107,8 @@ public class SearchFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
-        ((AppCompatActivity) getActivity()).setSupportActionBar(searchToolbar);
-        //((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
 
 
         artistList.setLayoutManager(new LinearLayoutManager(getActivity()));

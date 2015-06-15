@@ -4,12 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import dengn.spotifystreamer.R;
-import dengn.spotifystreamer.fragments.SearchFragment;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.utils.DebugConfig;
 
@@ -20,16 +22,26 @@ public class TracksActivity extends AppCompatActivity {
     private String mArtistId;
     private String mArtistName;
 
+    @InjectView(R.id.toolbar)
+    Toolbar tracksToolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracks);
 
+        ButterKnife.inject(this);
+
         Intent intent = getIntent();
         mArtistId = intent.getStringExtra("artistId");
         mArtistName = intent.getStringExtra("artistName");
-//        setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+        setSupportActionBar(tracksToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        getSupportActionBar().setTitle("Top 10 Tracks");
+        getSupportActionBar().setSubtitle(mArtistName);
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
