@@ -11,13 +11,15 @@ public class MyTrack implements Parcelable {
     public static final int PREVIEW_LENGTH_DEFAULT = 30;
 
     public String name;
+    public String artistName;
     public String albumName;
     public String imageLargeURL;
     public String imageSmallURL;
     public String previewURL;
 
-    public MyTrack(String name, String albumName, String imageLargeURL, String imageSmallURL, String previewURL) {
+    public MyTrack(String name, String artistName, String albumName, String imageLargeURL, String imageSmallURL, String previewURL) {
         this.name = name;
+        this.artistName = artistName;
         this.albumName = albumName;
         this.imageLargeURL = imageLargeURL;
         this.imageSmallURL = imageSmallURL;
@@ -32,6 +34,7 @@ public class MyTrack implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.name);
+        dest.writeString(this.artistName);
         dest.writeString(this.albumName);
         dest.writeString(this.imageLargeURL);
         dest.writeString(this.imageSmallURL);
@@ -40,6 +43,7 @@ public class MyTrack implements Parcelable {
 
     private MyTrack(Parcel in) {
         this.name = in.readString();
+        this.artistName = in.readString();
         this.albumName = in.readString();
         this.imageLargeURL = in.readString();
         this.imageSmallURL = in.readString();

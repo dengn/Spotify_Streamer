@@ -8,6 +8,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
@@ -26,6 +28,9 @@ public class PlayerActivity extends AppCompatActivity {
     private String mTrackPreview;
     private String mAlbumImage;
 
+    private ArrayList<MyTrack> mTracks = new ArrayList<>();
+    private int position = 0;
+
     private PlayerFragment mPlayerFragment;
 
 
@@ -42,18 +47,15 @@ public class PlayerActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Intent intent = getIntent();
-        mArtistName = intent.getStringExtra("artist_name");
-        mAlbumName = intent.getStringExtra("album_name");
-        mTrackName = intent.getStringExtra("track_name");
-        mTrackDuration = intent.getIntExtra("task_duration", MyTrack.PREVIEW_LENGTH_DEFAULT);
-        mTrackPreview = intent.getStringExtra("track_preview");
-        mAlbumImage = intent.getStringExtra("album_image");
+
+        mTracks = intent.getParcelableArrayListExtra("tracks");
+        position = intent.getIntExtra("position", 0);
 
 
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            mPlayerFragment = PlayerFragment.newInstance(mArtistName, mAlbumName, mTrackName, mTrackDuration, mTrackPreview, mAlbumImage);
+            mPlayerFragment = PlayerFragment.newInstance(mTracks, position);
             transaction.replace(R.id.player_main, mPlayerFragment);
             transaction.commit();
         }

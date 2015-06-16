@@ -128,12 +128,8 @@ public class TracksFragment extends Fragment {
                 if (mTracks.get(position).previewURL != null) {
 
                     Intent intent = new Intent(getActivity(), PlayerActivity.class);
-                    intent.putExtra("artist_name", mArtistName);
-                    intent.putExtra("album_name", mTracks.get(position).albumName);
-                    intent.putExtra("track_name", mTracks.get(position).name);
-                    intent.putExtra("task_duration", MyTrack.PREVIEW_LENGTH_DEFAULT);
-                    intent.putExtra("track_preview", mTracks.get(position).previewURL);
-                    intent.putExtra("album_image", mTracks.get(position).imageLargeURL);
+                    intent.putParcelableArrayListExtra("tracks", mTracks);
+                    intent.putExtra("position", position);
 
                     startActivity(intent);
                 }
@@ -153,14 +149,14 @@ public class TracksFragment extends Fragment {
                 public void success(Tracks tracks, Response response) {
 
                     if (tracks == null || tracks.tracks.size() == 0 || tracks.tracks == null) {
-                        MyTrack track = new MyTrack(getString(R.string.tracks_not_found), null, null, null, null);
+                        MyTrack track = new MyTrack(getString(R.string.tracks_not_found), null, null, null, null, null);
                         mTracks.clear();
                         mTracks.add(track);
 
                     } else {
                         mTracks.clear();
                         for (Track item : tracks.tracks) {
-                            MyTrack track = new MyTrack(item.name, item.album.name, ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_MEDIUM), ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_SMALL), item.preview_url);
+                            MyTrack track = new MyTrack(item.name, mArtistName, item.album.name, ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_MEDIUM), ImageUtils.getImageUrl(item.album.images, ImageUtils.IMAGE_SMALL), item.preview_url);
                             mTracks.add(track);
                         }
                     }
