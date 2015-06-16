@@ -1,6 +1,5 @@
 package dengn.spotifystreamer.fragments;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
@@ -74,7 +73,7 @@ public class SearchFragment extends Fragment {
 
     }
 
-
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // Save the fragment's state here

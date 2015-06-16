@@ -68,7 +68,6 @@ public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletion
     private static final int seekBackwardTime = 1000;
     private static final int seekForwardTime = 1000;
 
-    private int playPosition = 0;
 
     private MediaPlayer mediaPlayer;
 
@@ -88,6 +87,7 @@ public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletion
 
     public PlayerFragment() {
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -120,10 +120,13 @@ public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletion
 
         ButterKnife.inject(this, view);
 
+
+
         mediaPlayer = new MediaPlayer();
         // Listeners
         seekBar.setOnSeekBarChangeListener(this);
         mediaPlayer.setOnCompletionListener(this);
+
 
         artistName.setText(mArtistName);
         albumName.setText(mAlbumName);
