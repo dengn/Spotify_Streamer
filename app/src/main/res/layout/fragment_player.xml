@@ -3,7 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="10dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
     android:orientation="vertical">
 
     <TextView
@@ -24,8 +26,8 @@
 
     <ImageView
         android:id="@+id/player_album_img"
-        android:layout_width="320dp"
-        android:layout_height="320dp"
+        android:layout_width="310dp"
+        android:layout_height="310dp"
         android:layout_gravity="center_horizontal"/>
 
     <TextView
@@ -47,7 +49,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="2dp"
         android:gravity="center_vertical|center_horizontal"
         android:orientation="horizontal"
         >
@@ -73,7 +75,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="30dp"
         android:layout_marginRight="30dp">
 

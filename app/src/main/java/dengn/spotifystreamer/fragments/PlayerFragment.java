@@ -1,6 +1,8 @@
 package dengn.spotifystreamer.fragments;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,15 +15,18 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.utils.DebugConfig;
+import dengn.spotifystreamer.utils.PlayerUtils;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class PlayerFragment extends Fragment {
+public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener{
 
     @InjectView(R.id.player_artist_name)
     TextView artistName;
@@ -51,9 +56,13 @@ public class PlayerFragment extends Fragment {
     private String mTrackPreview;
     private String mAlbumImage;
 
-    private boolean isPlaying = false;
 
+    private int playPosition = 0;
 
+    private MediaPlayer mediaPlayer;
+
+    // Handler to update UI timer, progress bar etc,.
+    private Handler mHandler = new Handler();
 
     public static PlayerFragment newInstance(String artistName, String albumName, String trackName, int trackDuration, String trackPreview, String albumImage) {
         PlayerFragment fragment = new PlayerFragment();
@@ -78,6 +87,8 @@ public class PlayerFragment extends Fragment {
 
         setRetainInstance(true);
 
+
+
         if (getArguments() != null) {
             mArtistName = getArguments().getString("artist_name");
             mAlbumName = getArguments().getString("album_name");
@@ -86,8 +97,8 @@ public class PlayerFragment extends Fragment {
             mTrackPreview = getArguments().getString("track_preview");
             mAlbumImage = getArguments().getString("album_image");
 
-            if(DebugConfig.DEBUG)
-                Log.d(DebugConfig.TAG, "mAlbumImage "+mAlbumImage);
+            if (DebugConfig.DEBUG)
+                Log.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
         }
     }
 
@@ -98,27 +109,156 @@ public class PlayerFragment extends Fragment {
 
         ButterKnife.inject(this, view);
 
+        mediaPlayer = new MediaPlayer();
+        // Listeners
+        seekBar.setOnSeekBarChangeListener(this);
+        mediaPlayer.setOnCompletionListener(this);
+
         artistName.setText(mArtistName);
         albumName.setText(mAlbumName);
         trackName.setText(mTrackName);
         playTime.setText("0:00");
         totalTime.setText("0:30");
+
         Picasso.with(getActivity()).load(mAlbumImage).into(albumImage);
+
+        playSong();
 
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isPlaying){
-                    playPause.setBackgroundResource(android.R.drawable.ic_media_play);
-                    isPlaying = false;
-                }
-                else{
-                    playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
-                    isPlaying = true;
+                // check for already playing
+                if(mediaPlayer.isPlaying()){
+                    if(mediaPlayer!=null){
+                        mediaPlayer.pause();
+                        // Changing button image to play button
+                        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+                    }
+                }else{
+                    // Resume song
+                    if(mediaPlayer!=null){
+                        mediaPlayer.start();
+                        updateProgressBar();
+                        // Changing button image to pause button
+                        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+                    }
                 }
             }
         });
 
+
         return view;
     }
+
+    @Override
+    public void onDetach(){
+        super.onDetach();
+        mHandler.removeCallbacks(mUpdateTimeTask);
+        mediaPlayer.release();
+    }
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+
+        mHandler.removeCallbacks(mUpdateTimeTask);
+        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+        seekBar.setProgress(0);
+        playTime.setText("0:00");
+
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+    }
+
+    /**
+     * When user starts moving the progress handler
+     * */
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        // remove message Handler from updating progress bar
+        mHandler.removeCallbacks(mUpdateTimeTask);
+
+    }
+
+    /**
+     * When user stops moving the progress hanlder
+     * */
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+        mHandler.removeCallbacks(mUpdateTimeTask);
+        int totalDuration = mediaPlayer.getDuration();
+        int currentPosition = PlayerUtils.progressToTimer(seekBar.getProgress(), totalDuration);
+
+        // forward or backward to certain seconds
+        mediaPlayer.seekTo(currentPosition);
+
+        // update timer progress again
+        updateProgressBar();
+
+    }
+
+
+    /**
+     * Function to play a song
+     * */
+    public void  playSong(){
+        // Play song
+        try {
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(mTrackPreview);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+
+            playTime.setText(PlayerUtils.milliSecondsToTimer(mediaPlayer.getCurrentPosition()));
+            totalTime.setText(PlayerUtils.milliSecondsToTimer(mediaPlayer.getDuration()));
+            // set Progress bar values
+            seekBar.setProgress(0);
+            seekBar.setMax(100);
+
+            // Updating progress bar
+            updateProgressBar();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * Update timer on seekbar
+     * */
+    public void updateProgressBar() {
+        mHandler.postDelayed(mUpdateTimeTask, 100);
+    }
+
+    /**
+     * Background Runnable thread
+     * */
+    private Runnable mUpdateTimeTask = new Runnable() {
+        public void run() {
+            long totalDuration = mediaPlayer.getDuration();
+            long currentDuration = mediaPlayer.getCurrentPosition();
+
+            // Displaying Total Duration time
+            playTime.setText(PlayerUtils.milliSecondsToTimer(currentDuration));
+            // Displaying time completed playing
+            totalTime.setText(PlayerUtils.milliSecondsToTimer(totalDuration));
+
+            // Updating progress bar
+            int progress = PlayerUtils.getProgressPercentage(currentDuration, totalDuration);
+
+            seekBar.setProgress(progress);
+
+            // Running this thread after 100 milliseconds
+            mHandler.postDelayed(this, 100);
+        }
+    };
+
 }

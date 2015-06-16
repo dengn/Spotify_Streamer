@@ -28,6 +28,9 @@ public class PlayerActivity extends AppCompatActivity {
 
     private PlayerFragment mPlayerFragment;
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +48,7 @@ public class PlayerActivity extends AppCompatActivity {
         mTrackDuration = intent.getIntExtra("task_duration", MyTrack.PREVIEW_LENGTH_DEFAULT);
         mTrackPreview = intent.getStringExtra("track_preview");
         mAlbumImage = intent.getStringExtra("album_image");
+
 
 
         if (savedInstanceState == null) {
