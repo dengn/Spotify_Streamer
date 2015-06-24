@@ -20,9 +20,11 @@ import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.activities.TracksActivity;
 import dengn.spotifystreamer.adapters.ArtistListAdapter;
+import dengn.spotifystreamer.events.TrackIntent;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyArtist;
 import dengn.spotifystreamer.utils.DebugConfig;
@@ -92,6 +94,12 @@ public class SearchFragment extends Fragment {
         setRetainInstance(true);
 
 
+
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
     }
 
 
@@ -120,6 +128,7 @@ public class SearchFragment extends Fragment {
         artistListAdapter = new ArtistListAdapter(getActivity(), mArtists);
         artistList.setAdapter(artistListAdapter);
 
+
         artistList.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
 
 
@@ -128,9 +137,9 @@ public class SearchFragment extends Fragment {
 
                 if (mArtists.get(position).id != null) {
 
+
                     Intent intent = new Intent(getActivity(), TracksActivity.class);
-                    intent.putExtra("artistId", mArtists.get(position).id);
-                    intent.putExtra("artistName", mArtists.get(position).name);
+                    EventBus.getDefault().postSticky(new TrackIntent(mArtists.get(position).id, mArtists.get(position).name));
                     startActivity(intent);
                 }
             }

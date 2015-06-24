@@ -18,9 +18,11 @@ import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.activities.PlayerActivity;
 import dengn.spotifystreamer.adapters.TracksListAdapter;
+import dengn.spotifystreamer.events.PlayerIntent;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
@@ -97,6 +99,11 @@ public class TracksFragment extends Fragment {
     }
 
     @Override
+    public void onDestroy(){
+        super.onDestroy();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -123,15 +130,14 @@ public class TracksFragment extends Fragment {
         mTracksListAdapter = new TracksListAdapter(getActivity(), mTracks);
         trackList.setAdapter(mTracksListAdapter);
 
+
         trackList.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
                 if (mTracks.get(position).previewURL != null) {
 
                     Intent intent = new Intent(getActivity(), PlayerActivity.class);
-                    intent.putParcelableArrayListExtra("tracks", mTracks);
-                    intent.putExtra("position", position);
-
+                    EventBus.getDefault().postSticky(new PlayerIntent(mTracks, position));
                     startActivity(intent);
                 }
             }

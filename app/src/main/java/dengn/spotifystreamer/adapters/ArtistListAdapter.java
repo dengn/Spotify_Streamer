@@ -11,16 +11,11 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.models.MyArtist;
-import dengn.spotifystreamer.utils.ImageUtils;
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Artists;
-import kaaes.spotify.webapi.android.models.Pager;
 
 /**
  * Created by OLEDCOMM on 12/06/2015.
@@ -44,7 +39,6 @@ public class ArtistListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mArtists = artists;
         notifyDataSetChanged();
     }
-
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

@@ -11,7 +11,9 @@ import android.view.MenuItem;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.events.TrackIntent;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.utils.DebugConfig;
 
@@ -26,15 +28,17 @@ public class TracksActivity extends AppCompatActivity {
     Toolbar tracksToolbar;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracks);
 
         ButterKnife.inject(this);
 
-        Intent intent = getIntent();
-        mArtistId = intent.getStringExtra("artistId");
-        mArtistName = intent.getStringExtra("artistName");
+
+
+        TrackIntent intent = EventBus.getDefault().getStickyEvent(TrackIntent.class);
+        mArtistId = intent.artistId;
+        mArtistName = intent.artistName;
 
 
         setSupportActionBar(tracksToolbar);
@@ -54,6 +58,7 @@ public class TracksActivity extends AppCompatActivity {
                     savedInstanceState, "tracks_fragment");
         }
     }
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

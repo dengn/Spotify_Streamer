@@ -16,10 +16,6 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.models.MyTrack;
-import dengn.spotifystreamer.utils.ImageUtils;
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Pager;
-import kaaes.spotify.webapi.android.models.Tracks;
 
 /**
  * Created by OLEDCOMM on 12/06/2015.
@@ -43,6 +39,7 @@ public class TracksListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mTracks = tracks;
         notifyDataSetChanged();
     }
+
 
 
     @Override

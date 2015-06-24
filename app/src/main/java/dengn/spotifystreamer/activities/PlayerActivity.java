@@ -12,7 +12,9 @@ import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.events.PlayerIntent;
 import dengn.spotifystreamer.fragments.PlayerFragment;
 import dengn.spotifystreamer.models.MyTrack;
 
@@ -46,11 +48,13 @@ public class PlayerActivity extends AppCompatActivity {
         setSupportActionBar(playerToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Intent intent = getIntent();
-
-        mTracks = intent.getParcelableArrayListExtra("tracks");
-        position = intent.getIntExtra("position", 0);
-
+//        Intent intent = getIntent();
+//
+//        mTracks = intent.getParcelableArrayListExtra("tracks");
+//        position = intent.getIntExtra("position", 0);
+        PlayerIntent intent = EventBus.getDefault().getStickyEvent(PlayerIntent.class);
+        mTracks = intent.tracks;
+        position = intent.position;
 
 
         if (savedInstanceState == null) {
