@@ -1,6 +1,5 @@
 package dengn.spotifystreamer.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
@@ -22,13 +21,13 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
-import dengn.spotifystreamer.activities.TracksActivity;
 import dengn.spotifystreamer.adapters.ArtistListAdapter;
 import dengn.spotifystreamer.events.TrackIntent;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyArtist;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
+import dengn.spotifystreamer.utils.LogHelper;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -80,8 +79,7 @@ public class SearchFragment extends Fragment {
         super.onSaveInstanceState(outState);
         // Save the fragment's state here
 
-        if (DebugConfig.DEBUG)
-            Log.d(DebugConfig.TAG, "save data to bundle");
+        LogHelper.d(DebugConfig.TAG, "save data to bundle");
         if (mArtists != null) {
             outState.putParcelableArrayList("artists", mArtists);
         }
@@ -94,11 +92,10 @@ public class SearchFragment extends Fragment {
         setRetainInstance(true);
 
 
-
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
     }
 
@@ -111,8 +108,7 @@ public class SearchFragment extends Fragment {
             // Restore the fragment's state here
             mArtists = savedInstanceState.getParcelableArrayList("artists");
 
-            if (DebugConfig.DEBUG)
-                Log.d(DebugConfig.TAG, "get data from saved bundle");
+            LogHelper.d(DebugConfig.TAG, "get data from saved bundle");
         }
 
         //Ui init
@@ -137,10 +133,8 @@ public class SearchFragment extends Fragment {
 
                 if (mArtists.get(position).id != null) {
 
-
-                    Intent intent = new Intent(getActivity(), TracksActivity.class);
-                    EventBus.getDefault().postSticky(new TrackIntent(mArtists.get(position).id, mArtists.get(position).name));
-                    startActivity(intent);
+                    //Post event with TrackIntent back to SearchActivity
+                    EventBus.getDefault().post(new TrackIntent(mArtists.get(position).id, mArtists.get(position).name));
                 }
             }
         }));
@@ -150,7 +144,6 @@ public class SearchFragment extends Fragment {
 
         return view;
     }
-
 
 
     private void setUpSearchText() {
@@ -182,7 +175,8 @@ public class SearchFragment extends Fragment {
 
 
     private void showToast(final String msg) {
-        if(isAdded()) {
+        //Makes sure that fragment is attached to Activity already, and getActivity will not return null
+        if (isAdded()) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -197,7 +191,6 @@ public class SearchFragment extends Fragment {
         spotify.searchArtists(artistName, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
-
 
 
                 if (artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
@@ -217,7 +210,7 @@ public class SearchFragment extends Fragment {
                 }
 
                 //Bind data to list and show
-                if(isAdded()) {
+                if (isAdded()) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -235,7 +228,7 @@ public class SearchFragment extends Fragment {
 
                 mArtists.clear();
                 //Error happens, Clear the list
-                if(isAdded()) {
+                if (isAdded()) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -268,4 +261,5 @@ public class SearchFragment extends Fragment {
             }
         });
     }
+
 }

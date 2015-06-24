@@ -1,11 +1,9 @@
 package dengn.spotifystreamer.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,13 +18,13 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
-import dengn.spotifystreamer.activities.PlayerActivity;
 import dengn.spotifystreamer.adapters.TracksListAdapter;
 import dengn.spotifystreamer.events.PlayerIntent;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
+import dengn.spotifystreamer.utils.LogHelper;
 import dengn.spotifystreamer.utils.SettingUtils;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -74,13 +72,19 @@ public class TracksFragment extends Fragment {
     public TracksFragment() {
     }
 
+    public void onNewDataRefresh(String artistId, String artistName){
+        mArtistId = artistId;
+        mArtistName = artistName;
+        reloadData();
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // Save the fragment's state here
 
-        if (DebugConfig.DEBUG)
-            Log.d(DebugConfig.TAG, "save data to bundle");
+        LogHelper.d(DebugConfig.TAG, "save data to bundle");
+
         if (mTracks != null) {
             outState.putParcelableArrayList("tracks", mTracks);
         }
@@ -112,8 +116,7 @@ public class TracksFragment extends Fragment {
             mTracks = savedInstanceState.getParcelableArrayList("tracks");
             reload = false;
 
-            if (DebugConfig.DEBUG)
-                Log.d(DebugConfig.TAG, "get data from saved bundle");
+            LogHelper.d(DebugConfig.TAG, "get data from saved bundle");
         } else {
             reload = true;
         }
@@ -136,13 +139,34 @@ public class TracksFragment extends Fragment {
             public void onItemClick(View view, int position) {
                 if (mTracks.get(position).previewURL != null) {
 
-                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
-                    EventBus.getDefault().postSticky(new PlayerIntent(mTracks, position));
-                    startActivity(intent);
+                    LogHelper.d(DebugConfig.TAG, "track item clicked");
+                    //Send event with playIntent back to activity
+                    EventBus.getDefault().post(new PlayerIntent(mTracks, position));
+
                 }
             }
         }));
 
+        reloadData();
+
+
+        return view;
+    }
+
+
+
+    private void showToast(final String msg) {
+        if(isAdded()) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
+                }
+            });
+        }
+    }
+
+    private void reloadData(){
         if (reload) {
 
             progressBar.setVisibility(View.VISIBLE);
@@ -213,22 +237,6 @@ public class TracksFragment extends Fragment {
                             break;
                     }
                     showToast("failure:" + error.getKind());
-                }
-            });
-        }
-
-
-        return view;
-    }
-
-
-
-    private void showToast(final String msg) {
-        if(isAdded()) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
                 }
             });
         }

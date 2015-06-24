@@ -3,8 +3,7 @@ package dengn.spotifystreamer.fragments;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +22,13 @@ import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
+import dengn.spotifystreamer.utils.LogHelper;
 import dengn.spotifystreamer.utils.PlayerUtils;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
+public class PlayerFragment extends DialogFragment implements MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
 
     @InjectView(R.id.player_artist_name)
     TextView artistName;
@@ -102,14 +102,13 @@ public class PlayerFragment extends Fragment implements MediaPlayer.OnCompletion
             position = getArguments().getInt("position");
 
             mArtistName = mTracks.get(position).artistName;
-            mAlbumName = mTracks.get(position).artistName;
+            mAlbumName = mTracks.get(position).albumName;
             mTrackName = mTracks.get(position).name;
             mTrackDuration = MyTrack.PREVIEW_LENGTH_DEFAULT;
             mTrackPreview = mTracks.get(position).previewURL;
             mAlbumImage = mTracks.get(position).imageLargeURL;
 
-            if (DebugConfig.DEBUG)
-                Log.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
+            LogHelper.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
         }
     }
 
