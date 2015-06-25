@@ -1,8 +1,13 @@
 package dengn.spotifystreamer.fragments;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +19,13 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.models.MyTrack;
+import dengn.spotifystreamer.services.MusicService;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 import dengn.spotifystreamer.utils.PlayerUtils;
@@ -28,7 +33,7 @@ import dengn.spotifystreamer.utils.PlayerUtils;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class PlayerFragment extends DialogFragment implements MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
+public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarChangeListener {
 
     @InjectView(R.id.player_artist_name)
     TextView artistName;
@@ -71,6 +76,10 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
 
     private MediaPlayer mediaPlayer;
 
+    //service
+    private MusicService musicService;
+    private Intent playIntent;
+
     // Handler to update UI timer, progress bar etc,.
     private Handler mHandler = new Handler();
 
@@ -88,12 +97,30 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
     public PlayerFragment() {
     }
 
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            //get service
+            musicService = binder.getService();
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
+
 
 
         if (getArguments() != null) {
@@ -110,7 +137,19 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
 
             LogHelper.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
         }
+
+        if(playIntent==null){
+            if(isAdded()) {
+                playIntent = new Intent(getActivity(), MusicService.class);
+                playIntent.putParcelableArrayListExtra("tracks", mTracks);
+                playIntent.putExtra("position", position);
+                getActivity().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            }
+
+        }
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -121,10 +160,10 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
 
 
 
-        mediaPlayer = new MediaPlayer();
+        //mediaPlayer = new MediaPlayer();
         // Listeners
         seekBar.setOnSeekBarChangeListener(this);
-        mediaPlayer.setOnCompletionListener(this);
+        //mediaPlayer.setOnCompletionListener(this);
 
 
         artistName.setText(mArtistName);
@@ -135,27 +174,35 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
 
         Picasso.with(getActivity()).load(mAlbumImage).into(albumImage);
 
-        playSong();
+        musicService.playSong();
 
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // check for already playing
-                if (mediaPlayer.isPlaying()) {
-                    if (mediaPlayer != null) {
-                        mediaPlayer.pause();
-                        // Changing button image to play button
-                        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
-                    }
-                } else {
-                    // Resume song
-                    if (mediaPlayer != null) {
-                        mediaPlayer.start();
-                        updateProgressBar();
-                        // Changing button image to pause button
-                        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
-                    }
+                if(musicService.isPlaying()){
+                    musicService.play();
+                    playPause.setBackgroundResource(android.R.drawable.ic_media_play);
                 }
+                else{
+                    musicService.pause();
+                    playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+                }
+//                if (mediaPlayer.isPlaying()) {
+//                    if (mediaPlayer != null) {
+//                        mediaPlayer.pause();
+//                        // Changing button image to play button
+//                        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+//                    }
+//                } else {
+//                    // Resume song
+//                    if (mediaPlayer != null) {
+//                        mediaPlayer.start();
+//                        updateProgressBar();
+//                        // Changing button image to pause button
+//                        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+//                    }
+//                }
             }
         });
 
@@ -256,31 +303,31 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
     @Override
     public void onPause() {
         super.onPause();
-        if (mediaPlayer.isPlaying()) {
-            if (mediaPlayer != null) {
-                mediaPlayer.pause();
-                // Changing button image to play button
-                playPause.setBackgroundResource(android.R.drawable.ic_media_play);
-            }
-        }
+//        if (mediaPlayer.isPlaying()) {
+//            if (mediaPlayer != null) {
+//                mediaPlayer.pause();
+//                // Changing button image to play button
+//                playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+//            }
+//        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mHandler.removeCallbacks(mUpdateTimeTask);
-        mediaPlayer.release();
+        //mediaPlayer.release();
     }
 
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-
-        mHandler.removeCallbacks(mUpdateTimeTask);
-        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
-        seekBar.setProgress(0);
-        playTime.setText("0:00");
-
-    }
+//    @Override
+//    public void onCompletion(MediaPlayer mp) {
+//
+//        mHandler.removeCallbacks(mUpdateTimeTask);
+//        playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+//        seekBar.setProgress(0);
+//        playTime.setText("0:00");
+//
+//    }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -341,10 +388,10 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
     public void playSong() {
         // Play song
         try {
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(mTrackPreview);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
+            //mediaPlayer.reset();
+            //mediaPlayer.setDataSource(mTrackPreview);
+            //mediaPlayer.prepare();
+            //mediaPlayer.start();
             playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
 
             playTime.setText(PlayerUtils.milliSecondsToTimer(mediaPlayer.getCurrentPosition()));
@@ -358,8 +405,6 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         } catch (IllegalStateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -377,8 +422,11 @@ public class PlayerFragment extends DialogFragment implements MediaPlayer.OnComp
      */
     private Runnable mUpdateTimeTask = new Runnable() {
         public void run() {
-            long totalDuration = mediaPlayer.getDuration();
-            long currentDuration = mediaPlayer.getCurrentPosition();
+//            long totalDuration = mediaPlayer.getDuration();
+//            long currentDuration = mediaPlayer.getCurrentPosition();
+
+            long totalDuration = musicService.getDuration();
+            long currentDuration = musicService.getCurrentPosition();
 
             // Displaying Total Duration time
             playTime.setText(PlayerUtils.milliSecondsToTimer(currentDuration));
