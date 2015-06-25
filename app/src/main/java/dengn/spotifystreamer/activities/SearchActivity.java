@@ -134,13 +134,16 @@ public class SearchActivity extends AppCompatActivity {
     //Receive event with PlayIntent object, from Item Click in TracksFragment
     public void onEvent(PlayerIntent playerIntent){
 
-        LogHelper.i(DebugConfig.TAG, "play intent received");
-        mTracks = playerIntent.tracks;
-        position = playerIntent.position;
+        LogHelper.i(DebugConfig.TAG, "play intent received in SearchActivity");
+        if(mTwoPane) {
 
-        //Can only be from two pane situation, launch player fragment as dialog.
-        PlayerFragment playerFragment = PlayerFragment.newInstance(mTracks, position);
-        playerFragment.show(getSupportFragmentManager().beginTransaction(), "Player");
+            mTracks = playerIntent.tracks;
+            position = playerIntent.position;
+
+            //Can only be from two pane situation, launch player fragment as dialog.
+            PlayerFragment playerFragment = PlayerFragment.newInstance(mTracks, position);
+            playerFragment.show(getSupportFragmentManager().beginTransaction(), "Player");
+        }
     }
 
     @Override

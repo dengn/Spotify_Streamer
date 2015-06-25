@@ -105,6 +105,11 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             //get service
             musicService = binder.getService();
+            musicService.playSong();
+
+            if(musicService.isPlaying()){
+                playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+            }
 
         }
 
@@ -149,6 +154,14 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         }
     }
 
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        if(isAdded()){
+            getActivity().unbindService(musicConnection);
+        }
+    }
+
 
 
     @Override
@@ -174,18 +187,18 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         Picasso.with(getActivity()).load(mAlbumImage).into(albumImage);
 
-        musicService.playSong();
+        //musicService.playSong();
 
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // check for already playing
                 if(musicService.isPlaying()){
-                    musicService.play();
+                    musicService.pause();
                     playPause.setBackgroundResource(android.R.drawable.ic_media_play);
                 }
                 else{
-                    musicService.pause();
+                    musicService.play();
                     playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
                 }
 //                if (mediaPlayer.isPlaying()) {

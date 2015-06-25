@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import dengn.spotifystreamer.models.MyTrack;
+import dengn.spotifystreamer.utils.DebugConfig;
+import dengn.spotifystreamer.utils.LogHelper;
 
 /**
  * Created by OLEDCOMM on 24/06/2015.
@@ -63,6 +65,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
 
     public void playSong() {
+        LogHelper.i(DebugConfig.TAG, "play song called");
         try {
             mPlayer.reset();
             mPlayer.setDataSource(mTracks.get(position).previewURL);
@@ -78,11 +81,13 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     public void play(){
+        LogHelper.i(DebugConfig.TAG, "play called");
         if(mPlayer!=null)
             mPlayer.start();
     }
 
     public void pause() {
+        LogHelper.i(DebugConfig.TAG, "pause called");
         if (mPlayer.isPlaying() && mPlayer != null)
             mPlayer.pause();
     }
