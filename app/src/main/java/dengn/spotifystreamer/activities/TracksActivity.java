@@ -83,7 +83,7 @@ public class TracksActivity extends AppCompatActivity {
     //Receive event with playIntent, from tracks fragment item click
     public void onEvent(PlayerIntent playerIntent){
 
-        LogHelper.d(DebugConfig.TAG, "play intent received");
+        LogHelper.i(DebugConfig.TAG, "play intent received in tracksActivity");
         mTracks = playerIntent.tracks;
         position = playerIntent.position;
 
