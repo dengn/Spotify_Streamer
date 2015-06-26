@@ -101,16 +101,18 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     }
 
     //connect to the service
-    private ServiceConnection musicConnection = new ServiceConnection(){
+    private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+
+            LogHelper.i(DebugConfig.TAG, "service bound");
             //get service
             musicService = binder.getService();
             musicService.playSong();
 
-            if(musicService.isPlaying()){
+            if (musicService.isPlaying()) {
                 playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
             }
 
@@ -146,31 +148,35 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             LogHelper.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
         }
 
-        if(playIntent==null){
-            if(isAdded()) {
+        if (playIntent == null) {
+            if (isAdded()) {
                 playIntent = new Intent(getActivity(), MusicService.class);
                 playIntent.putParcelableArrayListExtra("tracks", mTracks);
                 playIntent.putExtra("position", position);
-                getActivity().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+
+                //Use application context to avoid runtime change, and no more activity context problem
+                getActivity().getApplicationContext().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             }
 
         }
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
 
         EventBus.getDefault().unregister(this);
-        if(isAdded()){
-            getActivity().unbindService(musicConnection);
+        if (isAdded()) {
+            getActivity().getApplicationContext().unbindService(musicConnection);
         }
     }
 
 
-    public void onEventMainThread(TickEvent event){
+    public void onEventMainThread(TickEvent event) {
 
         LogHelper.i(DebugConfig.TAG, "TickEvent received");
+
+        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
 
         long totalDuration = event.duration;
         long currentDuration = event.currentPostion;
@@ -188,9 +194,11 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     }
 
-    public void onEventMainThread(FinishEvent event){
+    public void onEventMainThread(FinishEvent event) {
         LogHelper.i(DebugConfig.TAG, "FinishEvent received");
-        if(event.isFinish){
+        if (event.isFinish) {
+            LogHelper.i(DebugConfig.TAG, "set play icon2");
+
             playPause.setBackgroundResource(android.R.drawable.ic_media_play);
             seekBar.setProgress(0);
             playTime.setText("0:00");
@@ -221,11 +229,11 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             @Override
             public void onClick(View v) {
                 // check for already playing
-                if(musicService.isPlaying()){
+                if (musicService.isPlaying()) {
                     musicService.pause();
+                    LogHelper.i(DebugConfig.TAG, "set play icon1");
                     playPause.setBackgroundResource(android.R.drawable.ic_media_play);
-                }
-                else{
+                } else {
                     musicService.play();
                     playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
                 }
@@ -243,9 +251,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
                 // get current song position
                 long currentPosition = musicService.getCurrentPosition();
                 // check if seekBackward time is greater than 0 sec
-                if ((int)currentPosition - seekBackwardTime >= 0) {
+                if ((int) currentPosition - seekBackwardTime >= 0) {
                     // forward song
-                    musicService.seekTo((int)currentPosition - seekBackwardTime);
+                    musicService.seekTo((int) currentPosition - seekBackwardTime);
                 } else {
                     // backward to starting position
                     musicService.seekTo(0);
@@ -268,10 +276,10 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
                 // check if seekForward time is lesser than song duration
                 if (currentPosition + seekForwardTime <= musicService.getDuration()) {
                     // forward song
-                    musicService.seekTo((int)currentPosition + seekForwardTime);
+                    musicService.seekTo((int) currentPosition + seekForwardTime);
                 } else {
                     // forward to end position
-                    musicService.seekTo((int)musicService.getDuration());
+                    musicService.seekTo((int) musicService.getDuration());
                 }
             }
         });
@@ -293,7 +301,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
                     musicService.playSong();
                 } else {
                     // play first song
-                    position=0;
+                    position = 0;
                     refreshUI(position);
                     musicService.setSongPosition(position);
                     musicService.playSong();
@@ -317,7 +325,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
                     musicService.playSong();
                 } else {
                     // play last song
-                    position=mTracks.size()-1;
+                    position = mTracks.size() - 1;
                     refreshUI(position);
                     musicService.setSongPosition(position);
                     musicService.playSong();
@@ -329,21 +337,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         return view;
     }
-
-//    @Override
-//    public void onPause() {
-//        super.onPause();
-//
-//    }
-//
-//    @Override
-//    public void onDetach() {
-//        super.onDetach();
-//
-//    }
-
-
-
 
 
     @Override
@@ -370,13 +363,15 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         long totalDuration = musicService.getDuration();
         int currentPosition = PlayerUtils.progressToTimer(seekBar.getProgress(), totalDuration);
 
+        //update UI to the current scrolled position
+        seekBar.setProgress(seekBar.getProgress());
+        playTime.setText(PlayerUtils.milliSecondsToTimer(currentPosition));
         // forward or backward to certain seconds
         musicService.seekTo(currentPosition);
 
-
     }
 
-    private void refreshUI(int newPosition){
+    private void refreshUI(int newPosition) {
         mArtistName = mTracks.get(newPosition).artistName;
         mAlbumName = mTracks.get(newPosition).artistName;
         mTrackName = mTracks.get(newPosition).name;
@@ -395,7 +390,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
 
     }
-
 
 
 }

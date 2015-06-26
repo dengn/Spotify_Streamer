@@ -38,10 +38,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private IBinder mBinder = new MusicBinder();
 
-
-    public MusicService() {
+    public MusicService(){
 
     }
+
 
     @Override
     public void onCreate() {
@@ -73,6 +73,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         return mBinder;
     }
 
+
     public void setSongPosition(int position){
         this.position = position;
     }
@@ -80,10 +81,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public void playSong() {
         LogHelper.i(DebugConfig.TAG, "play song called");
         try {
+
             mPlayer.reset();
             mPlayer.setDataSource(mTracks.get(position).previewURL);
-            mPlayer.prepare();
-            mPlayer.start();
+            //We are streaming online music, it should be asynchronous, otherwise it will take too much time on the UI thread
+            mPlayer.prepareAsync();
+
             startTicking();
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -133,7 +136,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     if(mPlayer.isPlaying())
                         EventBus.getDefault().post(new TickEvent(getDuration(), getCurrentPosition()));
                 }
-            }, 0, 100);
+            }, 100, 100);
         }
 
     }
@@ -169,7 +172,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-
+        mPlayer.start();
     }
 
     //binder
