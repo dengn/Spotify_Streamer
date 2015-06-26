@@ -11,7 +11,12 @@ import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import de.greenrobot.event.EventBus;
+import dengn.spotifystreamer.events.FinishEvent;
+import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
@@ -27,6 +32,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private ArrayList<MyTrack> mTracks = new ArrayList<>();
 
+    private Timer mTimer;
+
     private int position = 0;
 
     private IBinder mBinder = new MusicBinder();
@@ -41,7 +48,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         super.onCreate();
 
         mPlayer = new MediaPlayer();
+        initMusicPlayer();
     }
+
+
 
     public void initMusicPlayer() {
         //set player properties
@@ -63,6 +73,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         return mBinder;
     }
 
+    public void setSongPosition(int position){
+        this.position = position;
+    }
 
     public void playSong() {
         LogHelper.i(DebugConfig.TAG, "play song called");
@@ -71,6 +84,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             mPlayer.setDataSource(mTracks.get(position).previewURL);
             mPlayer.prepare();
             mPlayer.start();
+            startTicking();
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         } catch (IllegalStateException e) {
@@ -84,12 +98,18 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         LogHelper.i(DebugConfig.TAG, "play called");
         if(mPlayer!=null)
             mPlayer.start();
+        startTicking();
     }
 
     public void pause() {
         LogHelper.i(DebugConfig.TAG, "pause called");
         if (mPlayer.isPlaying() && mPlayer != null)
             mPlayer.pause();
+        stopTicking();
+    }
+
+    public void seekTo(int position){
+        mPlayer.seekTo(position);
     }
 
     public boolean isPlaying() {
@@ -104,9 +124,31 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         return mPlayer.getCurrentPosition();
     }
 
+    private void startTicking(){
+        if(mTimer==null) {
+            mTimer = new Timer();
+            mTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if(mPlayer.isPlaying())
+                        EventBus.getDefault().post(new TickEvent(getDuration(), getCurrentPosition()));
+                }
+            }, 0, 100);
+        }
+
+    }
+
+    private void stopTicking() {
+        if (mTimer != null) {
+            mTimer.cancel();
+            mTimer = null;
+        }
+    }
+
     //release resources when unbind
     @Override
     public boolean onUnbind(Intent intent) {
+        stopTicking();
         mPlayer.stop();
         mPlayer.release();
         return false;
@@ -115,7 +157,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-
+        LogHelper.i(DebugConfig.TAG, "music complete");
+        stopTicking();
+        EventBus.getDefault().post(new FinishEvent(true));
     }
 
     @Override
