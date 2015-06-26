@@ -373,7 +373,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     private void refreshUI(int newPosition) {
         mArtistName = mTracks.get(newPosition).artistName;
-        mAlbumName = mTracks.get(newPosition).artistName;
+        mAlbumName = mTracks.get(newPosition).albumName;
         mTrackName = mTracks.get(newPosition).name;
         mTrackDuration = MyTrack.PREVIEW_LENGTH_DEFAULT;
         mTrackPreview = mTracks.get(newPosition).previewURL;
