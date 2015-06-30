@@ -63,31 +63,39 @@ public class SearchActivity extends AppCompatActivity {
             mTwoPane = true;
 
             // If is two pane, init a TracksFragment in the same activity
+            //mTracksFragment = (TracksFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_tracks);
             if (savedInstanceState == null) {
+                LogHelper.i(DebugConfig.TAG, "recreate mTracksFragment");
+
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
                 mTracksFragment = TracksFragment.newInstance("", "");
-                transaction.replace(R.id.tracks_main, mTracksFragment);
+                transaction.add(R.id.tracks_main, mTracksFragment);
                 transaction.commit();
             }
             else{
+                LogHelper.i(DebugConfig.TAG, "retrieve mTracksFragment");
                 mTracksFragment = (TracksFragment) getSupportFragmentManager().getFragment(
                         savedInstanceState, "track_fragment");
             }
-        }
-        else{
+        } else {
             mTwoPane = false;
         }
 
 
         //No matter two pane or not, we need to add SearchFragment
+
+        //mSearchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_search);
+
         if (savedInstanceState == null) {
+            LogHelper.i(DebugConfig.TAG, "recreate mSearchFragment");
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             mSearchFragment = SearchFragment.newInstance();
-            transaction.replace(R.id.search_main, mSearchFragment);
+            transaction.add(R.id.search_main, mSearchFragment);
             transaction.commit();
 
         }
         else{
+            LogHelper.i(DebugConfig.TAG, "retrieve mSearchFragment");
             mSearchFragment = (SearchFragment) getSupportFragmentManager().getFragment(
                     savedInstanceState, "search_fragment");
         }
@@ -96,13 +104,11 @@ public class SearchActivity extends AppCompatActivity {
         setSupportActionBar(searchToolbar);
 
 
-
     }
 
 
-
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
         //Unregister EventBus
         EventBus.getDefault().unregister(this);
@@ -110,15 +116,19 @@ public class SearchActivity extends AppCompatActivity {
 
 
     //Receive event with TrackIntent object, from Item Click in SearchFragment
-    public void onEvent(TrackIntent trackIntent){
-        if(mTwoPane) {
+    public void onEvent(TrackIntent trackIntent) {
+        LogHelper.i(DebugConfig.TAG, "track intent received in SearchActivity");
+        if (mTwoPane) {
             //Two pane, refresh TrackFragment by using new data get from SearchFragment
             mArtistId = trackIntent.artistId;
             mArtistName = trackIntent.artistName;
 
+            LogHelper.i(DebugConfig.TAG, "artistId: " + mArtistId);
+            LogHelper.i(DebugConfig.TAG, "artistName: " + mArtistName);
+
+            LogHelper.i(DebugConfig.TAG, "mTracksFragment is null: " + (mTracksFragment == null));
             mTracksFragment.onNewDataRefresh(mArtistId, mArtistName);
-        }
-        else{
+        } else {
             //Not two pane, start Tracks activity
             mArtistId = trackIntent.artistId;
             mArtistName = trackIntent.artistName;
@@ -132,10 +142,10 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     //Receive event with PlayIntent object, from Item Click in TracksFragment
-    public void onEvent(PlayerIntent playerIntent){
+    public void onEvent(PlayerIntent playerIntent) {
 
         LogHelper.i(DebugConfig.TAG, "play intent received in SearchActivity");
-        if(mTwoPane) {
+        if (mTwoPane) {
 
             mTracks = playerIntent.tracks;
             position = playerIntent.position;
@@ -152,10 +162,12 @@ public class SearchActivity extends AppCompatActivity {
         //Save the fragment's instance
         // fragment instance may be null
         if (mSearchFragment != null) {
+            LogHelper.i(DebugConfig.TAG, "search fragment saved");
             getSupportFragmentManager().putFragment(outState, "search_fragment", mSearchFragment);
         }
         if(mTracksFragment!=null) {
-            getSupportFragmentManager().putFragment(outState, "tracks_fragment", mTracksFragment);
+            LogHelper.i(DebugConfig.TAG, "tracks fragment saved");
+            getSupportFragmentManager().putFragment(outState, "track_fragment", mTracksFragment);
         }
     }
 

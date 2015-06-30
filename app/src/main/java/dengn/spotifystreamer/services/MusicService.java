@@ -151,6 +151,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     //release resources when unbind
     @Override
     public boolean onUnbind(Intent intent) {
+        LogHelper.i(DebugConfig.TAG, "unbind called");
         stopTicking();
         mPlayer.stop();
         mPlayer.release();

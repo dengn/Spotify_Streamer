@@ -2,6 +2,7 @@ package dengn.spotifystreamer.fragments;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
@@ -149,26 +150,50 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         }
 
         if (playIntent == null) {
-            if (isAdded()) {
-                playIntent = new Intent(getActivity(), MusicService.class);
-                playIntent.putParcelableArrayListExtra("tracks", mTracks);
-                playIntent.putExtra("position", position);
 
-                //Use application context to avoid runtime change, and no more activity context problem
-                getActivity().getApplicationContext().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            }
+            playIntent = new Intent(getActivity(), MusicService.class);
+            playIntent.putParcelableArrayListExtra("tracks", mTracks);
+            playIntent.putExtra("position", position);
+
+            //Use application context to avoid runtime change, and no more activity context problem
+            getActivity().getApplicationContext().bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+
 
         }
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        LogHelper.i(DebugConfig.TAG, "playFragment on dismiss called");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        LogHelper.i(DebugConfig.TAG, "playFragment on stop called");
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (getDialog() != null && getRetainInstance())
+            getDialog().setDismissMessage(null);
+        super.onDestroyView();
+
+        LogHelper.i(DebugConfig.TAG, "playFragment on destory view called");
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
+        LogHelper.i(DebugConfig.TAG, "playFragment on destory called");
+
         EventBus.getDefault().unregister(this);
-        if (isAdded()) {
-            getActivity().getApplicationContext().unbindService(musicConnection);
-        }
+
+        getActivity().getApplicationContext().unbindService(musicConnection);
+
     }
 
 

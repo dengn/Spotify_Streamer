@@ -73,8 +73,10 @@ public class TracksFragment extends Fragment {
     }
 
     public void onNewDataRefresh(String artistId, String artistName){
+        LogHelper.i(DebugConfig.TAG, "get new data and reload");
         mArtistId = artistId;
         mArtistName = artistName;
+        reload = true;
         reloadData();
     }
 
