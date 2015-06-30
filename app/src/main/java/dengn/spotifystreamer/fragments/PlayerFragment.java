@@ -112,6 +112,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             //get service
             musicService = binder.getService();
             musicService.playSong();
+//            Intent intent = new Intent(getActivity(), MusicService.class);
+//            intent.setAction(MusicService.ACTION_PLAY);
+//            getActivity().getApplicationContext().startService(intent);
 
             if (musicService.isPlaying()) {
                 playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
@@ -251,6 +254,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
 
         playPause.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 // check for already playing

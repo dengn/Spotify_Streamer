@@ -27,6 +27,23 @@ import dengn.spotifystreamer.utils.LogHelper;
 public class MusicService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
 
+    public static final String ACTION_PLAY = "ACTION_PLAY";
+    public static final String ACTION_PAUSE = "ACTION_PAUSE";
+    public static final String ACTION_NEXT = "ACTION_NEXT";
+    public static final String ACTION_PREVIOUS = "ACTION_PREVIOUS";
+    public static final String ACTION_FORWARD = "ACTION_FORWARD";
+    public static final String ACTION_BACKWARD = "ACTION_BACKWARD";
+
+
+    enum State{
+        Preparing,
+        Playing,
+        Paused,
+        Stopped
+    };
+
+    State mState = State.Stopped;
+
     // our media player
     private MediaPlayer mPlayer = null;
 
@@ -52,6 +69,35 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        LogHelper.i("LocalService", "Received start id " + startId + ": " + intent);
+
+        String action = intent.getAction();
+
+        mTracks = intent.getParcelableArrayListExtra("tracks");
+        position = intent.getIntExtra("position", 0);
+//        if (action.equals(ACTION_TOGGLE_PLAYBACK)) processTogglePlaybackRequest();
+//        else if (action.equals(ACTION_PLAY)) processPlayRequest();
+//        else if (action.equals(ACTION_PAUSE)) processPauseRequest();
+//        else if (action.equals(ACTION_SKIP)) processSkipRequest();
+//        else if (action.equals(ACTION_STOP)) processStopRequest();
+//        else if (action.equals(ACTION_REWIND)) processRewindRequest();
+//        else if (action.equals(ACTION_URL)) processAddRequest(intent);
+
+        if(action.equals(ACTION_PLAY)) processPlay();
+        else if(action.equals(ACTION_PAUSE)) processPause();
+        else if(action.equals(ACTION_NEXT)) processNext();
+        else if(action.equals(ACTION_PREVIOUS)) processPrevious();
+        else if(action.equals(ACTION_FORWARD)) processForward();
+        else if(action.equals(ACTION_BACKWARD)) processBackward();
+
+
+
+        // Means we started the service, but don't want it to
+        // restart in case it's killed.
+        return START_NOT_STICKY;
+    }
 
     public void initMusicPlayer() {
         //set player properties
@@ -64,13 +110,35 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         mPlayer.setOnErrorListener(this);
     }
 
+    private void processPlay(){
+        mPlayer.start();
+    }
+
+    private void processPause(){
+
+    }
+
+    private void processNext(){
+
+    }
+
+    private void processPrevious(){
+
+    }
+
+    private void processForward(){
+
+    }
+
+    private void processBackward(){
+
+    }
+
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        mTracks = intent.getParcelableArrayListExtra("tracks");
-        position = intent.getIntExtra("position", 0);
-        return mBinder;
+        return null;
     }
 
 
@@ -149,14 +217,24 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     //release resources when unbind
-    @Override
-    public boolean onUnbind(Intent intent) {
-        LogHelper.i(DebugConfig.TAG, "unbind called");
-        stopTicking();
-        mPlayer.stop();
-        mPlayer.release();
-        return false;
-    }
+//    @Override
+//    public boolean onUnbind(Intent intent) {
+//        super.onUnbind(intent);
+//        LogHelper.i(DebugConfig.TAG, "unbind called");
+//        stopTicking();
+//        mPlayer.stop();
+//        mPlayer.release();
+//        return false;
+//    }
+
+//    @Override
+//    public void onDestroy(){
+//        super.onDestroy();
+//
+//        stopTicking();
+//        mPlayer.stop();
+//        mPlayer.release();
+//    }
 
 
     @Override
