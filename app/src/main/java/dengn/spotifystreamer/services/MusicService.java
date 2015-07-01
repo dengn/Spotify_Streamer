@@ -54,7 +54,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private ArrayList<MyTrack> mTracks = new ArrayList<>();
 
-    private String mArtistName;
+    private String mArtistName = "";
 
     private Timer mTimer;
 
