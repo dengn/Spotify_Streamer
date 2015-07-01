@@ -5,7 +5,9 @@ package dengn.spotifystreamer.events;
  */
 public class FinishEvent {
     public boolean isFinish;
-    public FinishEvent(boolean isFinish){
+    public int position;
+    public FinishEvent(boolean isFinish, int position){
         this.isFinish = isFinish;
+        this.position = position;
     }
 }

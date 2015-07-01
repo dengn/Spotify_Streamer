@@ -45,6 +45,7 @@ public class SearchActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -155,6 +156,8 @@ public class SearchActivity extends AppCompatActivity {
             playerFragment.show(getSupportFragmentManager().beginTransaction(), "Player");
         }
     }
+
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
