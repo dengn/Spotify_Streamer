@@ -15,11 +15,14 @@ import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.events.PlayerIntent;
+import dengn.spotifystreamer.events.StateEvent;
+import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.events.TrackIntent;
 import dengn.spotifystreamer.fragments.PlayerFragment;
 import dengn.spotifystreamer.fragments.SearchFragment;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.models.MyTrack;
+import dengn.spotifystreamer.services.MusicService;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 
@@ -44,6 +47,12 @@ public class SearchActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
+
+    private MenuItem nowPlayingItem;
+
+    private Intent playIntent;
+
+    private MusicService.State mState;
 
 
     @Override
@@ -113,6 +122,8 @@ public class SearchActivity extends AppCompatActivity {
         super.onDestroy();
         //Unregister EventBus
         EventBus.getDefault().unregister(this);
+
+        LogHelper.i(DebugConfig.TAG, "Search Activity destroyed");
     }
 
 
@@ -145,18 +156,51 @@ public class SearchActivity extends AppCompatActivity {
     //Receive event with PlayIntent object, from Item Click in TracksFragment
     public void onEvent(PlayerIntent playerIntent) {
 
+        mTracks = playerIntent.tracks;
+        position = playerIntent.position;
+
         LogHelper.i(DebugConfig.TAG, "play intent received in SearchActivity");
         if (mTwoPane) {
 
-            mTracks = playerIntent.tracks;
-            position = playerIntent.position;
+            PlayerFragment.showInContext(this, mTwoPane);
 
-            //Can only be from two pane situation, launch player fragment as dialog.
-            PlayerFragment playerFragment = PlayerFragment.newInstance(mTracks, position);
-            playerFragment.show(getSupportFragmentManager().beginTransaction(), "Player");
+            playIntent = new Intent(this, MusicService.class);
+            playIntent.putParcelableArrayListExtra("tracks", mTracks);
+            playIntent.putExtra("position", position);
+            playIntent.putExtra("artistName", mArtistName);
+            playIntent.setAction(MusicService.ACTION_PLAY);
+
+            //Use application context to avoid runtime change, and no more activity context problem
+            this.startService(playIntent);
+
+
         }
     }
 
+    public void onEvent(StateEvent event) {
+
+        mState = event.state;
+        switch(mState){
+            case Playing:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Paused:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Prepared:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Retriving:
+                nowPlayingItem.setVisible(false);
+                break;
+        }
+
+    }
+
+    public void onEvent(TickEvent event){
+
+        nowPlayingItem.setVisible(true);
+    }
 
 
     @Override
@@ -178,6 +222,7 @@ public class SearchActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_search, menu);
+        nowPlayingItem = menu.findItem(R.id.current_music);
         return true;
     }
 
@@ -192,6 +237,22 @@ public class SearchActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
+            return true;
+        }else if(id==R.id.current_music){
+            if (mTwoPane) {
+                //Can only be from two pane situation, launch player fragment as dialog.
+                PlayerFragment.showInContext(this, mTwoPane);
+                playIntent = new Intent(this, MusicService.class);
+                playIntent.setAction(MusicService.ACTION_RESHOWN);
+                startService(playIntent);
+            }
+            else{
+                Intent intent = new Intent(this, PlayerActivity.class);
+                startActivity(intent);
+                playIntent = new Intent(this, MusicService.class);
+                playIntent.setAction(MusicService.ACTION_RESHOWN);
+                startService(playIntent);
+            }
             return true;
         }
 

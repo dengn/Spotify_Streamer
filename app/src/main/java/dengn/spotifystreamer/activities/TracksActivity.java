@@ -15,9 +15,11 @@ import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.events.PlayerIntent;
-import dengn.spotifystreamer.fragments.PlayerFragment;
+import dengn.spotifystreamer.events.StateEvent;
+import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.models.MyTrack;
+import dengn.spotifystreamer.services.MusicService;
 import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 
@@ -34,6 +36,10 @@ public class TracksActivity extends AppCompatActivity {
 
     private ArrayList<MyTrack> mTracks = new ArrayList<>();
     private int position = 0;
+
+    private MenuItem nowPlayingItem;
+
+    private MusicService.State mState;
 
     /*
     Only launched by phone, not tablets
@@ -64,42 +70,62 @@ public class TracksActivity extends AppCompatActivity {
             mTracksFragment = TracksFragment.newInstance(mArtistId, mArtistName);
             transaction.replace(R.id.tracks_main, mTracksFragment);
             transaction.commit();
-        }
-        else{
+        } else {
             LogHelper.d(DebugConfig.TAG, "reuse trackFragment");
-            mTracksFragment = (TracksFragment)getSupportFragmentManager().getFragment(
+            mTracksFragment = (TracksFragment) getSupportFragmentManager().getFragment(
                     savedInstanceState, "tracks_fragment");
         }
     }
 
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
     }
 
 
     //Receive event with playIntent, from tracks fragment item click
-    public void onEvent(PlayerIntent playerIntent){
+    public void onEvent(PlayerIntent playerIntent) {
 
-        LogHelper.d(DebugConfig.TAG, "play intent received");
+        LogHelper.i(DebugConfig.TAG, "play intent received in Tracks Activity");
         mTracks = playerIntent.tracks;
         position = playerIntent.position;
 
-        if(isTwoPane) {
-            //two pane, launch PlayFragment as dialog
-            PlayerFragment playerFragment = PlayerFragment.newInstance(mTracks, position);
-            playerFragment.show(getSupportFragmentManager().beginTransaction(), "Player");
-        }
-        else{
-            //not two pane, launch PlayFragment in a new activity
-            Intent intent = new Intent(this, PlayerActivity.class);
-            intent.putParcelableArrayListExtra("tracks", mTracks);
-            intent.putExtra("position", position);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(this, PlayerActivity.class);
+        intent.putParcelableArrayListExtra("tracks", mTracks);
+        intent.putExtra("position", position);
+        intent.putExtra("artistName", mArtistName);
+        startActivity(intent);
+
+
     }
+
+    public void onEvent(StateEvent event) {
+
+        mState = event.state;
+        switch(mState){
+            case Playing:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Paused:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Prepared:
+                nowPlayingItem.setVisible(true);
+                break;
+            case Retriving:
+                nowPlayingItem.setVisible(false);
+                break;
+        }
+
+    }
+
+    public void onEvent(TickEvent event){
+
+        nowPlayingItem.setVisible(true);
+    }
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -115,7 +141,8 @@ public class TracksActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tracks, menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
+        nowPlayingItem = menu.findItem(R.id.current_music);
         return true;
     }
 
@@ -131,12 +158,21 @@ public class TracksActivity extends AppCompatActivity {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        }
-        else if(id==android.R.id.home){
+        } else if (id == android.R.id.home) {
             LogHelper.d(DebugConfig.TAG, "back home clicked");
 
             finish();
             return true;
+        } else if (id == R.id.current_music) {
+
+
+            //not two pane, launch PlayFragment in a new activity
+            Intent intent = new Intent(this, PlayerActivity.class);
+            startActivity(intent);
+
+
+            return true;
+
         }
 
         return super.onOptionsItemSelected(item);

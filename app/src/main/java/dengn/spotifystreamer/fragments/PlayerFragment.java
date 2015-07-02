@@ -2,10 +2,12 @@ package dengn.spotifystreamer.fragments;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,7 @@ import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.events.FinishEvent;
+import dengn.spotifystreamer.events.MusicSetEvent;
 import dengn.spotifystreamer.events.StateEvent;
 import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.models.MyTrack;
@@ -35,6 +38,8 @@ import dengn.spotifystreamer.utils.PlayerUtils;
  * A placeholder fragment containing a simple view.
  */
 public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarChangeListener {
+
+    public static final String PLAYER_FRAGMENT_TAG = "player-fragment";
 
     @InjectView(R.id.player_artist_name)
     TextView artistName;
@@ -61,12 +66,12 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     @InjectView(R.id.player_backward)
     ImageButton backward;
 
-    private String mArtistName;
-    private String mAlbumName;
-    private String mTrackName;
-    private int mTrackDuration;
-    private String mTrackPreview;
-    private String mAlbumImage;
+//    private String mArtistName;
+//    private String mAlbumName;
+//    private String mTrackName;
+//    private int mTrackDuration;
+//    private String mTrackPreview;
+//    private String mAlbumImage;
 
     private ArrayList<MyTrack> mTracks = new ArrayList<>();
     private int position = 0;
@@ -77,25 +82,37 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     private MusicService.State mState = MusicService.State.Retriving;
 
-    private MediaPlayer mediaPlayer;
-
     //service
-    private MusicService musicService;
     private Intent playIntent;
 
-    // Handler to update UI timer, progress bar etc,.
-    private Handler mHandler = new Handler();
 
 
-    public static PlayerFragment newInstance(ArrayList<MyTrack> tracks, int position) {
+    public static PlayerFragment newInstance() {
         PlayerFragment fragment = new PlayerFragment();
         Bundle args = new Bundle();
-        args.putParcelableArrayList("tracks", tracks);
-        args.putInt("position", position);
         fragment.setArguments(args);
         return fragment;
     }
 
+    public static void showInContext(FragmentActivity context, boolean asDialog) {
+        PlayerFragment player = PlayerFragment.newInstance();
+        FragmentManager fm = context.getSupportFragmentManager();
+
+        // Don't show more than one.
+        FragmentTransaction ft = fm.beginTransaction();
+        Fragment prev = fm.findFragmentByTag(PLAYER_FRAGMENT_TAG);
+        if (prev != null) ft.remove(prev);
+        ft.commit();
+
+        if (asDialog) {
+            player.show(fm, PLAYER_FRAGMENT_TAG);
+        } else {
+            // http://developer.android.com/guide/topics/ui/dialogs.html#FullscreenDialog
+            FragmentTransaction transaction = fm.beginTransaction();
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            transaction.replace(R.id.player_main, player, PLAYER_FRAGMENT_TAG).commit();
+        }
+    }
 
     public PlayerFragment() {
     }
@@ -111,34 +128,17 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         LogHelper.i(DebugConfig.TAG, "playFragment on Create called");
 
-        if (getArguments() != null) {
-
-            mTracks = getArguments().getParcelableArrayList("tracks");
-            position = getArguments().getInt("position");
-
-            mArtistName = mTracks.get(position).artistName;
-            mAlbumName = mTracks.get(position).albumName;
-            mTrackName = mTracks.get(position).name;
-            mTrackDuration = MyTrack.PREVIEW_LENGTH_DEFAULT;
-            mTrackPreview = mTracks.get(position).previewURL;
-            mAlbumImage = mTracks.get(position).imageLargeURL;
-
-            LogHelper.d(DebugConfig.TAG, "mAlbumImage " + mAlbumImage);
-        }
-
-        if (playIntent == null) {
-
-            playIntent = new Intent(getActivity(), MusicService.class);
-            playIntent.putParcelableArrayListExtra("tracks", mTracks);
-            playIntent.putExtra("position", position);
-            playIntent.putExtra("artistName", mArtistName);
-            playIntent.setAction(MusicService.ACTION_PLAY);
-
-            //Use application context to avoid runtime change, and no more activity context problem
-            getActivity().getApplicationContext().startService(playIntent);
 
 
-        }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
+
+        LogHelper.i(DebugConfig.TAG, "playFragment on Activity created called");
+
+
     }
 
     @Override
@@ -174,6 +174,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     }
 
 
+
+
+
     public void onEventMainThread(TickEvent event) {
 
         LogHelper.d(DebugConfig.TAG, "TickEvent received");
@@ -196,6 +199,15 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     }
 
+    public void onEvent(MusicSetEvent event){
+
+        LogHelper.i(DebugConfig.TAG, "MusicSetEvent received in PlayerFragment");
+        artistName.setText(event.myTrack.artistName);
+        albumName.setText(event.myTrack.albumName);
+        trackName.setText(event.myTrack.name);
+        Picasso.with(getActivity()).load(event.myTrack.imageLargeURL).into(albumImage);
+    }
+
     public void onEvent(StateEvent event) {
 
         mState = event.state;
@@ -213,9 +225,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             playTime.setText("0:00");
             mState = MusicService.State.Retriving;
 
-
-            refreshUI(event.position);
-            position = event.position;
         }
     }
 
@@ -230,13 +239,11 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         seekBar.setOnSeekBarChangeListener(this);
 
 
-        artistName.setText(mArtistName);
-        albumName.setText(mAlbumName);
-        trackName.setText(mTrackName);
+
         playTime.setText("0:00");
         totalTime.setText("0:30");
 
-        Picasso.with(getActivity()).load(mAlbumImage).into(albumImage);
+        playIntent = new Intent(getActivity().getApplicationContext(), MusicService.class);
 
 
         playPause.setOnClickListener(new View.OnClickListener() {
@@ -307,17 +314,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
                 playIntent.setAction(MusicService.ACTION_NEXT);
                 // check if next song is there or not
-                if (position < mTracks.size() - 1) {
-                    position++;
-                    refreshUI(position);
-
-                } else {
-                    // play first song
-                    position = 0;
-                    refreshUI(position);
-
-                }
-                playIntent.putExtra("position", position);
                 getActivity().getApplicationContext().startService(playIntent);
 
             }
@@ -333,17 +329,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             public void onClick(View arg0) {
 
                 playIntent.setAction(MusicService.ACTION_PREVIOUS);
-                if (position > 0) {
-                    position--;
-                    refreshUI(position);
-
-                } else {
-                    // play last song
-                    position = mTracks.size() - 1;
-                    refreshUI(position);
-
-                }
-                playIntent.putExtra("position", position);
                 getActivity().getApplicationContext().startService(playIntent);
             }
         });
@@ -390,25 +375,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     }
 
-    private void refreshUI(int newPosition) {
-        mArtistName = mTracks.get(newPosition).artistName;
-        mAlbumName = mTracks.get(newPosition).albumName;
-        mTrackName = mTracks.get(newPosition).name;
-        mTrackDuration = MyTrack.PREVIEW_LENGTH_DEFAULT;
-        mTrackPreview = mTracks.get(newPosition).previewURL;
-        mAlbumImage = mTracks.get(newPosition).imageLargeURL;
-
-
-        artistName.setText(mArtistName);
-        albumName.setText(mAlbumName);
-        trackName.setText(mTrackName);
-        playTime.setText("0:00");
-        totalTime.setText("0:30");
-
-        Picasso.with(getActivity()).load(mAlbumImage).into(albumImage);
-
-
-    }
 
 
 }

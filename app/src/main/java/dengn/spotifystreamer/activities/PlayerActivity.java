@@ -15,11 +15,14 @@ import butterknife.InjectView;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.fragments.PlayerFragment;
 import dengn.spotifystreamer.models.MyTrack;
+import dengn.spotifystreamer.services.MusicService;
 
 public class PlayerActivity extends AppCompatActivity {
 
     @InjectView(R.id.toolbar)
     Toolbar playerToolbar;
+
+
 
     private String mArtistName;
     private String mAlbumName;
@@ -34,6 +37,7 @@ public class PlayerActivity extends AppCompatActivity {
     private PlayerFragment mPlayerFragment;
 
 
+    private Intent playIntent;
 
 
     @Override
@@ -46,17 +50,32 @@ public class PlayerActivity extends AppCompatActivity {
         setSupportActionBar(playerToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        //PlayerFragment.showInContext(this, false);
+
+
         Intent intent = getIntent();
 
-        mTracks = intent.getParcelableArrayListExtra("tracks");
-        position = intent.getIntExtra("position", 0);
+        playIntent = new Intent(this, MusicService.class);
+        if(intent.getStringExtra("artistName")!=null && intent.getParcelableArrayListExtra("tracks")!=null) {
+            mTracks = intent.getParcelableArrayListExtra("tracks");
+            position = intent.getIntExtra("position", 0);
+            mArtistName = intent.getStringExtra("artistName");
 
-
+            playIntent.putParcelableArrayListExtra("tracks", mTracks);
+            playIntent.putExtra("position", position);
+            playIntent.putExtra("artistName", mArtistName);
+            playIntent.setAction(MusicService.ACTION_PLAY);
+            startService(playIntent);
+        }
+        else{
+            playIntent.setAction(MusicService.ACTION_RESHOWN);
+            startService(playIntent);
+        }
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            mPlayerFragment = PlayerFragment.newInstance(mTracks, position);
-            transaction.replace(R.id.player_main, mPlayerFragment);
+            mPlayerFragment = PlayerFragment.newInstance();
+            transaction.add(R.id.player_main, mPlayerFragment);
             transaction.commit();
         }
         else{
@@ -80,7 +99,7 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_player, menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         return true;
     }
 

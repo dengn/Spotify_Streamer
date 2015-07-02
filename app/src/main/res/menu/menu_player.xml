@@ -7,9 +7,5 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/current_music"
-        android:background="@drawable/ic_launcher_white"
-        android:title="@string/menu_current_music"
-        app:showAsAction="always"/>
+
 </menu>

@@ -16,6 +16,7 @@ import java.util.TimerTask;
 
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.events.FinishEvent;
+import dengn.spotifystreamer.events.MusicSetEvent;
 import dengn.spotifystreamer.events.StateEvent;
 import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.models.MyTrack;
@@ -38,9 +39,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public static final String ACTION_FORWARD = "ACTION_FORWARD";
     public static final String ACTION_BACKWARD = "ACTION_BACKWARD";
     public static final String ACTION_SET_POSITION = "ACTION_SET_POSITION";
+    public static final String ACTION_RESHOWN = "ACTION_RESHOWN";
 
-
-    public enum State{
+    public enum State {
         Retriving,
         Prepared,
         Playing,
@@ -62,7 +63,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private IBinder mBinder = new MusicBinder();
 
-    public MusicService(){
+    public MusicService() {
 
     }
 
@@ -81,28 +82,33 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 
-
         LogHelper.i(DebugConfig.TAG, "Received start id " + startId + ": " + intent);
 
         String action = intent.getAction();
 
-        mTracks = intent.getParcelableArrayListExtra("tracks");
+        if(intent.getParcelableArrayListExtra("tracks")!=null)
+            mTracks = intent.getParcelableArrayListExtra("tracks");
         //Check if it's the same music playing
-        if(position!=intent.getIntExtra("position", 0)|| !mArtistName.equals(intent.getStringExtra("artistName"))){
-            mState = State.Retriving;
-            position = intent.getIntExtra("position", 0);
-            mArtistName = intent.getStringExtra("artistName");
+        if(intent.getParcelableArrayListExtra("tracks")!=null && intent.getStringExtra("artistName")!=null) {
+            if (position != intent.getIntExtra("position", 0) || !mArtistName.equals(intent.getStringExtra("artistName"))) {
+                mState = State.Retriving;
+                position = intent.getIntExtra("position", 0);
+                mArtistName = intent.getStringExtra("artistName");
 
+            }
         }
 
 
-        if(action.equals(ACTION_PLAY)) processPlay();
-        else if(action.equals(ACTION_PAUSE)) processPause();
-        else if(action.equals(ACTION_NEXT)) processNext();
-        else if(action.equals(ACTION_PREVIOUS)) processPrevious();
-        else if(action.equals(ACTION_FORWARD)) processForward();
-        else if(action.equals(ACTION_BACKWARD)) processBackward();
-        else if(action.equals(ACTION_SET_POSITION)){
+        if (action.equals(ACTION_PLAY)) processPlay();
+        else if (action.equals(ACTION_PAUSE)) processPause();
+        else if (action.equals(ACTION_NEXT)) processNext();
+        else if (action.equals(ACTION_PREVIOUS)) processPrevious();
+        else if (action.equals(ACTION_FORWARD)) processForward();
+        else if (action.equals(ACTION_BACKWARD)) processBackward();
+        else if (action.equals(ACTION_RESHOWN)){
+            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
+        }
+        else if (action.equals(ACTION_SET_POSITION)) {
             int currentPosition = intent.getIntExtra("newCurrentPosition", 0);
             processSetPosition(currentPosition);
         }
@@ -124,8 +130,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         mPlayer.setOnErrorListener(this);
     }
 
-    private void processPlay(){
-        switch(mState){
+    private void processPlay() {
+        switch (mState) {
             case Retriving:
                 setMusic();
                 break;
@@ -141,12 +147,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
 
 
-
     }
 
-    private void processPause(){
+    private void processPause() {
 
-        switch(mState){
+        switch (mState) {
 
             case Playing:
                 pause();
@@ -157,23 +162,38 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     }
 
-    private void processNext(){
+    private void processNext() {
 
+        if (position < mTracks.size() - 1) {
+            position++;
+
+        } else {
+            // play first song
+            position = 0;
+
+        }
 
         setMusic();
 
 
     }
 
-    private void processPrevious(){
+    private void processPrevious() {
+        if (position > 0) {
+            position--;
 
+        } else {
+            // play last song
+            position = mTracks.size() - 1;
+
+        }
 
         setMusic();
 
 
     }
 
-    private void processForward(){
+    private void processForward() {
 
         long currentPosition = mPlayer.getCurrentPosition();
         // check if seekForward time is lesser than song duration
@@ -185,7 +205,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             mPlayer.seekTo((int) mPlayer.getDuration());
         }
 
-        switch(mState){
+        switch (mState) {
             case Paused:
                 play();
                 break;
@@ -197,7 +217,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     }
 
-    private void processBackward(){
+    private void processBackward() {
         long currentPosition = mPlayer.getCurrentPosition();
         // check if seekBackward time is greater than 0 sec
         if ((int) currentPosition - seekBackwardTime >= 0) {
@@ -208,7 +228,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             mPlayer.seekTo(0);
         }
 
-        switch(mState){
+        switch (mState) {
             case Paused:
                 play();
                 break;
@@ -219,9 +239,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     }
 
-    private void processSetPosition(int position){
+    private void processSetPosition(int position) {
         mPlayer.seekTo(position);
-        switch(mState){
+        switch (mState) {
             case Paused:
                 play();
                 break;
@@ -248,15 +268,18 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
 
-    public void setSongPosition(int position){
+    public void setSongPosition(int position) {
         this.position = position;
     }
 
-    private void setMusic(){
+    private void setMusic() {
         try {
 
             mPlayer.reset();
             mPlayer.setDataSource(mTracks.get(position).previewURL);
+            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
+            LogHelper.i(DebugConfig.TAG, "set music event fired ");
+
             //We are streaming online music, it should be asynchronous, otherwise it will take too much time on the UI thread
             mPlayer.prepareAsync();
 
@@ -269,9 +292,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
     }
 
-    private void play(){
+    private void play() {
         LogHelper.i(DebugConfig.TAG, "play called");
-        if(mPlayer!=null)
+
+        if (mPlayer != null)
             mPlayer.start();
         startTicking();
         mState = State.Playing;
@@ -288,16 +312,16 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
 
-    private void startTicking(){
-        if(mTimer==null) {
+    private void startTicking() {
+        if (mTimer == null) {
             mTimer = new Timer();
             mTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    if(mPlayer.isPlaying())
+                    if (mPlayer.isPlaying())
                         EventBus.getDefault().post(new TickEvent(mPlayer.getDuration(), mPlayer.getCurrentPosition()));
                 }
-            }, 1000, 100);
+            }, 100, 100);
         }
 
     }
@@ -310,22 +334,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
 
-
     @Override
     public void onCompletion(MediaPlayer mp) {
         LogHelper.i(DebugConfig.TAG, "music complete");
         mState = State.Retriving;
-        //stopTicking();
-        //EventBus.getDefault().post(new FinishEvent(true));
-
-        //Play next song automatically
-        if (position < mTracks.size() - 1) {
-            position++;
-        } else {
-            // play first song
-            position = 0;
-        }
-        EventBus.getDefault().post(new FinishEvent(true, position));
+        EventBus.getDefault().post(new FinishEvent(true));
         processNext();
 
     }
@@ -334,7 +347,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public boolean onError(MediaPlayer mp, int what, int extra) {
         mState = State.Retriving;
         stopTicking();
-        EventBus.getDefault().post(new FinishEvent(true, position));
+        EventBus.getDefault().post(new FinishEvent(true));
         return true;
     }
 
