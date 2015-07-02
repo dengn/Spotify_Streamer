@@ -94,25 +94,6 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         return fragment;
     }
 
-    public static void showInContext(FragmentActivity context, boolean asDialog) {
-        PlayerFragment player = PlayerFragment.newInstance();
-        FragmentManager fm = context.getSupportFragmentManager();
-
-        // Don't show more than one.
-        FragmentTransaction ft = fm.beginTransaction();
-        Fragment prev = fm.findFragmentByTag(PLAYER_FRAGMENT_TAG);
-        if (prev != null) ft.remove(prev);
-        ft.commit();
-
-        if (asDialog) {
-            player.show(fm, PLAYER_FRAGMENT_TAG);
-        } else {
-            // http://developer.android.com/guide/topics/ui/dialogs.html#FullscreenDialog
-            FragmentTransaction transaction = fm.beginTransaction();
-            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            transaction.replace(R.id.player_main, player, PLAYER_FRAGMENT_TAG).commit();
-        }
-    }
 
     public PlayerFragment() {
     }
@@ -183,6 +164,8 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
 
+        mState = MusicService.State.Playing;
+
         totalDuration = event.duration;
         currentDuration = event.currentPostion;
 
@@ -250,6 +233,8 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
             @Override
             public void onClick(View v) {
+
+                LogHelper.i(DebugConfig.TAG, "mState is "+mState);
                 // check for already playing
                 if (mState == MusicService.State.Playing) {
                     playIntent.setAction(MusicService.ACTION_PAUSE);
@@ -363,7 +348,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
 
         int newCurrentDuration = PlayerUtils.progressToTimer(seekBar.getProgress(), totalDuration);
-        LogHelper.i(DebugConfig.TAG, "newCurrentDuration: "+newCurrentDuration);
+        LogHelper.i(DebugConfig.TAG, "newCurrentDuration: " + newCurrentDuration);
 
         //update UI to the current scrolled position
         seekBar.setProgress(seekBar.getProgress());

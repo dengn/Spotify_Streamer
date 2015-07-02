@@ -91,6 +91,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         //Check if it's the same music playing
         if(intent.getParcelableArrayListExtra("tracks")!=null && intent.getStringExtra("artistName")!=null) {
             if (position != intent.getIntExtra("position", 0) || !mArtistName.equals(intent.getStringExtra("artistName"))) {
+
+                LogHelper.i(DebugConfig.TAG, "another music set");
                 mState = State.Retriving;
                 position = intent.getIntExtra("position", 0);
                 mArtistName = intent.getStringExtra("artistName");

@@ -104,26 +104,29 @@ public class TracksActivity extends AppCompatActivity {
     public void onEvent(StateEvent event) {
 
         mState = event.state;
-        switch(mState){
-            case Playing:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Paused:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Prepared:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Retriving:
-                nowPlayingItem.setVisible(false);
-                break;
+        if (nowPlayingItem != null) {
+            switch (mState) {
+                case Playing:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Paused:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Prepared:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Retriving:
+                    nowPlayingItem.setVisible(false);
+                    break;
+            }
         }
 
     }
 
-    public void onEvent(TickEvent event){
+    public void onEventMainThread(TickEvent event) {
 
-        nowPlayingItem.setVisible(true);
+        if (nowPlayingItem != null)
+            nowPlayingItem.setVisible(true);
     }
 
 

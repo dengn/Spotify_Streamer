@@ -2,6 +2,7 @@ package dengn.spotifystreamer.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -180,26 +181,29 @@ public class SearchActivity extends AppCompatActivity {
     public void onEvent(StateEvent event) {
 
         mState = event.state;
-        switch(mState){
-            case Playing:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Paused:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Prepared:
-                nowPlayingItem.setVisible(true);
-                break;
-            case Retriving:
-                nowPlayingItem.setVisible(false);
-                break;
+        if(nowPlayingItem!=null) {
+            switch (mState) {
+                case Playing:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Paused:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Prepared:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Retriving:
+                    nowPlayingItem.setVisible(false);
+                    break;
+            }
         }
 
     }
 
-    public void onEvent(TickEvent event){
+    public void onEventMainThread(TickEvent event){
 
-        nowPlayingItem.setVisible(true);
+        if(nowPlayingItem!=null)
+            nowPlayingItem.setVisible(true);
     }
 
 
@@ -241,7 +245,10 @@ public class SearchActivity extends AppCompatActivity {
         }else if(id==R.id.current_music){
             if (mTwoPane) {
                 //Can only be from two pane situation, launch player fragment as dialog.
-                PlayerFragment.showInContext(this, mTwoPane);
+                PlayerFragment player = PlayerFragment.newInstance();
+                FragmentManager fm = this.getSupportFragmentManager();
+                player.show(fm, PlayerFragment.PLAYER_FRAGMENT_TAG);
+
                 playIntent = new Intent(this, MusicService.class);
                 playIntent.setAction(MusicService.ACTION_RESHOWN);
                 startService(playIntent);
