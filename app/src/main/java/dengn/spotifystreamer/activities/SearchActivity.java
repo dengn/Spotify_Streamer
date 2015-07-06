@@ -61,10 +61,11 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+
         //Register EventBus
         EventBus.getDefault().register(this);
 
-        TrackIntent trackIntent = EventBus.getDefault().removeStickyEvent(TrackIntent.class);
+
 
         if (findViewById(R.id.tracks_main) != null) {
             // The detail container view will be present only in the
@@ -115,6 +116,28 @@ public class SearchActivity extends AppCompatActivity {
         setSupportActionBar(searchToolbar);
 
 
+        if (savedInstanceState != null) {
+            mState = (MusicService.State) savedInstanceState.getSerializable("state");
+            if(nowPlayingItem!=null) {
+                switch (mState) {
+                    case Playing:
+                        nowPlayingItem.setVisible(true);
+                        break;
+                    case Paused:
+                        nowPlayingItem.setVisible(true);
+                        break;
+                    case Prepared:
+                        nowPlayingItem.setVisible(true);
+                        break;
+                    case Retriving:
+                        nowPlayingItem.setVisible(false);
+                        break;
+                }
+            }
+        }
+
+
+
     }
 
 
@@ -163,7 +186,9 @@ public class SearchActivity extends AppCompatActivity {
         LogHelper.i(DebugConfig.TAG, "play intent received in SearchActivity");
         if (mTwoPane) {
 
-            PlayerFragment.showInContext(this, mTwoPane);
+            PlayerFragment player = PlayerFragment.newInstance();
+            FragmentManager fm = this.getSupportFragmentManager();
+            player.show(fm, PlayerFragment.PLAYER_FRAGMENT_TAG);
 
             playIntent = new Intent(this, MusicService.class);
             playIntent.putParcelableArrayListExtra("tracks", mTracks);
@@ -209,7 +234,9 @@ public class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
+
+        outState.putSerializable("state", mState);
+
         //Save the fragment's instance
         // fragment instance may be null
         if (mSearchFragment != null) {
@@ -220,6 +247,7 @@ public class SearchActivity extends AppCompatActivity {
             LogHelper.i(DebugConfig.TAG, "tracks fragment saved");
             getSupportFragmentManager().putFragment(outState, "track_fragment", mTracksFragment);
         }
+        super.onSaveInstanceState(outState);
     }
 
     @Override

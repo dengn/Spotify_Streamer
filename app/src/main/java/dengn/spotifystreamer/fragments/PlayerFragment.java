@@ -4,10 +4,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +13,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -40,6 +34,7 @@ import dengn.spotifystreamer.utils.PlayerUtils;
 public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarChangeListener {
 
     public static final String PLAYER_FRAGMENT_TAG = "player-fragment";
+
 
     @InjectView(R.id.player_artist_name)
     TextView artistName;
@@ -73,8 +68,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 //    private String mTrackPreview;
 //    private String mAlbumImage;
 
-    private ArrayList<MyTrack> mTracks = new ArrayList<>();
-    private int position = 0;
+//    private ArrayList<MyTrack> mTracks = new ArrayList<>();
+//    private int position = 0;
+    private MyTrack mCurrentTrack;
 
     private long totalDuration = 0;
     private long currentDuration = 0;
@@ -111,6 +107,18 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
 
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        // Save the fragment's state here
+
+        LogHelper.i(DebugConfig.TAG, "save data to bundle playerfragment");
+        if (mCurrentTrack != null) {
+            outState.putParcelable("mytrack", mCurrentTrack);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -160,6 +168,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     public void onEventMainThread(TickEvent event) {
 
+
         LogHelper.d(DebugConfig.TAG, "TickEvent received");
 
         playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
@@ -171,6 +180,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         // Displaying Total Duration time
         playTime.setText(PlayerUtils.milliSecondsToTimer(currentDuration));
+
         // Displaying time completed playing
         totalTime.setText(PlayerUtils.milliSecondsToTimer(totalDuration));
 
@@ -184,6 +194,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
     public void onEvent(MusicSetEvent event){
 
+        mCurrentTrack = event.myTrack;
         LogHelper.i(DebugConfig.TAG, "MusicSetEvent received in PlayerFragment");
         artistName.setText(event.myTrack.artistName);
         albumName.setText(event.myTrack.albumName);
@@ -214,9 +225,21 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
         View view = inflater.inflate(R.layout.fragment_player, container, false);
 
         ButterKnife.inject(this, view);
+
+        if(savedInstanceState!=null){
+            LogHelper.i(DebugConfig.TAG, "get data back from bundle playerfragment");
+            mCurrentTrack = savedInstanceState.getParcelable("mytrack");
+            //LogHelper.i(DebugConfig.TAG, "mCurrentTrack trackName: "+mCurrentTrack.name);
+            artistName.setText(mCurrentTrack.artistName);
+            albumName.setText(mCurrentTrack.albumName);
+            trackName.setText(mCurrentTrack.name);
+            Picasso.with(getActivity()).load(mCurrentTrack.imageLargeURL).into(albumImage);
+        }
 
         // Listeners
         seekBar.setOnSeekBarChangeListener(this);
@@ -242,6 +265,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
                     LogHelper.i(DebugConfig.TAG, "set play icon1");
                     playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+
                 }else if(mState == MusicService.State.Retriving){
                     playIntent.setAction(MusicService.ACTION_PLAY);
                     getActivity().getApplicationContext().startService(playIntent);
