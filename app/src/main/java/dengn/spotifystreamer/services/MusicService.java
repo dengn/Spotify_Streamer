@@ -46,7 +46,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         Prepared,
         Playing,
         Paused
-    };
+    }
+
+    ;
 
     State mState = State.Retriving;
 
@@ -86,18 +88,25 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
         String action = intent.getAction();
 
-        if(intent.getParcelableArrayListExtra("tracks")!=null)
+        if (intent.getParcelableArrayListExtra("tracks") != null)
             mTracks = intent.getParcelableArrayListExtra("tracks");
         //Check if it's the same music playing
-        if(intent.getParcelableArrayListExtra("tracks")!=null && intent.getStringExtra("artistName")!=null) {
-            if (position != intent.getIntExtra("position", 0) || !mArtistName.equals(intent.getStringExtra("artistName"))) {
 
-                LogHelper.i(DebugConfig.TAG, "another music set");
+        LogHelper.i(DebugConfig.TAG, "old position: " + position);
+        LogHelper.i(DebugConfig.TAG, "new position: " + intent.getIntExtra("position", 0));
+        LogHelper.i(DebugConfig.TAG, "old artistName: " + mArtistName);
+        LogHelper.i(DebugConfig.TAG, "new artistName: " + intent.getStringExtra("artistName"));
+        if (intent.getStringExtra("artistName") != null) {
+
+            if (!mArtistName.equals(intent.getStringExtra("artistName"))) {
                 mState = State.Retriving;
-                position = intent.getIntExtra("position", 0);
                 mArtistName = intent.getStringExtra("artistName");
-
             }
+        }
+
+        if (position != intent.getIntExtra("position", 0)) {
+            mState = State.Retriving;
+            position = intent.getIntExtra("position", 0);
         }
 
 
@@ -107,10 +116,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         else if (action.equals(ACTION_PREVIOUS)) processPrevious();
         else if (action.equals(ACTION_FORWARD)) processForward();
         else if (action.equals(ACTION_BACKWARD)) processBackward();
-        else if (action.equals(ACTION_RESHOWN)){
+        else if (action.equals(ACTION_RESHOWN)) {
             EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
-        }
-        else if (action.equals(ACTION_SET_POSITION)) {
+        } else if (action.equals(ACTION_SET_POSITION)) {
             int currentPosition = intent.getIntExtra("newCurrentPosition", 0);
             processSetPosition(currentPosition);
         }
