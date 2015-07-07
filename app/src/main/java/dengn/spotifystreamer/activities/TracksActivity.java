@@ -20,10 +20,12 @@ import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.services.MusicService;
-import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 
 public class TracksActivity extends AppCompatActivity {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(TracksActivity.class);
 
     private TracksFragment mTracksFragment;
 
@@ -65,13 +67,13 @@ public class TracksActivity extends AppCompatActivity {
         getSupportActionBar().setSubtitle(mArtistName);
 
         if (savedInstanceState == null) {
-            LogHelper.i(DebugConfig.TAG, "recreate trackFragment");
+            LogHelper.i(TAG, "recreate trackFragment");
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             mTracksFragment = TracksFragment.newInstance(mArtistId, mArtistName);
             transaction.replace(R.id.tracks_main, mTracksFragment);
             transaction.commit();
         } else {
-            LogHelper.d(DebugConfig.TAG, "reuse trackFragment");
+            LogHelper.d(TAG, "reuse trackFragment");
             mTracksFragment = (TracksFragment) getSupportFragmentManager().getFragment(
                     savedInstanceState, "tracks_fragment");
         }
@@ -88,7 +90,7 @@ public class TracksActivity extends AppCompatActivity {
     //Receive event with playIntent, from tracks fragment item click
     public void onEvent(PlayerIntent playerIntent) {
 
-        LogHelper.i(DebugConfig.TAG, "play intent received in Tracks Activity");
+        LogHelper.i(TAG, "play intent received in Tracks Activity");
         mTracks = playerIntent.tracks;
         position = playerIntent.position;
 
@@ -162,7 +164,7 @@ public class TracksActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         } else if (id == android.R.id.home) {
-            LogHelper.d(DebugConfig.TAG, "back home clicked");
+            LogHelper.d(TAG, "back home clicked");
 
             finish();
             return true;

@@ -20,13 +20,15 @@ import dengn.spotifystreamer.events.MusicSetEvent;
 import dengn.spotifystreamer.events.StateEvent;
 import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.models.MyTrack;
-import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 
 /**
  * Created by OLEDCOMM on 24/06/2015.
  */
 public class MusicService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(MusicService.class);
 
     private static final int seekBackwardTime = 1000;
     private static final int seekForwardTime = 1000;
@@ -84,18 +86,28 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 
-        LogHelper.i(DebugConfig.TAG, "Received start id " + startId + ": " + intent);
+        LogHelper.i(TAG, "Received start id " + startId + ": " + intent);
 
         String action = intent.getAction();
 
-        if (intent.getParcelableArrayListExtra("tracks") != null)
+        if (intent.getParcelableArrayListExtra("tracks") != null){
+
             mTracks = intent.getParcelableArrayListExtra("tracks");
+            if (position != intent.getIntExtra("position", 0)) {
+
+                LogHelper.i(TAG, "old position: " + position);
+                LogHelper.i(TAG, "new position: " + intent.getIntExtra("position", 0));
+
+                mState = State.Retriving;
+                position = intent.getIntExtra("position", 0);
+            }
+        }
+
         //Check if it's the same music playing
 
-        LogHelper.i(DebugConfig.TAG, "old position: " + position);
-        LogHelper.i(DebugConfig.TAG, "new position: " + intent.getIntExtra("position", 0));
-        LogHelper.i(DebugConfig.TAG, "old artistName: " + mArtistName);
-        LogHelper.i(DebugConfig.TAG, "new artistName: " + intent.getStringExtra("artistName"));
+
+        LogHelper.i(TAG, "old artistName: " + mArtistName);
+        LogHelper.i(TAG, "new artistName: " + intent.getStringExtra("artistName"));
         if (intent.getStringExtra("artistName") != null) {
 
             if (!mArtistName.equals(intent.getStringExtra("artistName"))) {
@@ -104,10 +116,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             }
         }
 
-        if (position != intent.getIntExtra("position", 0)) {
-            mState = State.Retriving;
-            position = intent.getIntExtra("position", 0);
-        }
+
 
 
         if (action.equals(ACTION_PLAY)) processPlay();
@@ -271,7 +280,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     @Override
     public void onDestroy() {
         super.onDestroy();
-        LogHelper.i(DebugConfig.TAG, "on Destroy called");
+        LogHelper.i(TAG, "on Destroy called");
         stopTicking();
         mPlayer.stop();
         mPlayer.release();
@@ -288,7 +297,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             mPlayer.reset();
             mPlayer.setDataSource(mTracks.get(position).previewURL);
             EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
-            LogHelper.i(DebugConfig.TAG, "set music event fired ");
+            LogHelper.i(TAG, "set music event fired ");
 
             //We are streaming online music, it should be asynchronous, otherwise it will take too much time on the UI thread
             mPlayer.prepareAsync();
@@ -303,7 +312,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void play() {
-        LogHelper.i(DebugConfig.TAG, "play called");
+        LogHelper.i(TAG, "play called");
 
         if (mPlayer != null)
             mPlayer.start();
@@ -313,7 +322,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void pause() {
-        LogHelper.i(DebugConfig.TAG, "pause called");
+        LogHelper.i(TAG, "pause called");
         if (mPlayer.isPlaying() && mPlayer != null)
             mPlayer.pause();
         stopTicking();
@@ -346,7 +355,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        LogHelper.i(DebugConfig.TAG, "music complete");
+        LogHelper.i(TAG, "music complete");
         mState = State.Retriving;
         EventBus.getDefault().post(new FinishEvent(true));
         processNext();

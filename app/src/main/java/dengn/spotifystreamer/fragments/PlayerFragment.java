@@ -24,7 +24,6 @@ import dengn.spotifystreamer.events.StateEvent;
 import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.services.MusicService;
-import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 import dengn.spotifystreamer.utils.PlayerUtils;
 
@@ -32,6 +31,9 @@ import dengn.spotifystreamer.utils.PlayerUtils;
  * A placeholder fragment containing a simple view.
  */
 public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarChangeListener {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(PlayerFragment.class);
 
     public static final String PLAYER_FRAGMENT_TAG = "player-fragment";
 
@@ -103,7 +105,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         EventBus.getDefault().register(this);
 
-        LogHelper.i(DebugConfig.TAG, "playFragment on Create called");
+        LogHelper.i(TAG, "playFragment on Create called");
 
 
 
@@ -114,7 +116,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         // Save the fragment's state here
 
-        LogHelper.i(DebugConfig.TAG, "save data to bundle playerfragment");
+        LogHelper.i(TAG, "save data to bundle playerfragment");
         if (mCurrentTrack != null) {
             outState.putParcelable("mytrack", mCurrentTrack);
         }
@@ -125,7 +127,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     public void onActivityCreated(Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
 
-        LogHelper.i(DebugConfig.TAG, "playFragment on Activity created called");
+        LogHelper.i(TAG, "playFragment on Activity created called");
 
 
     }
@@ -133,13 +135,13 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
-        LogHelper.i(DebugConfig.TAG, "playFragment on dismiss called");
+        LogHelper.i(TAG, "playFragment on dismiss called");
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        LogHelper.i(DebugConfig.TAG, "playFragment on stop called");
+        LogHelper.i(TAG, "playFragment on stop called");
     }
 
     @Override
@@ -148,14 +150,14 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             getDialog().setDismissMessage(null);
         super.onDestroyView();
 
-        LogHelper.i(DebugConfig.TAG, "playFragment on destory view called");
+        LogHelper.i(TAG, "playFragment on destory view called");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        LogHelper.i(DebugConfig.TAG, "playFragment on destory called");
+        LogHelper.i(TAG, "playFragment on destory called");
 
         EventBus.getDefault().unregister(this);
 
@@ -169,7 +171,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     public void onEventMainThread(TickEvent event) {
 
 
-        LogHelper.d(DebugConfig.TAG, "TickEvent received");
+        LogHelper.d(TAG, "TickEvent received");
 
         playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
 
@@ -195,7 +197,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     public void onEvent(MusicSetEvent event){
 
         mCurrentTrack = event.myTrack;
-        LogHelper.i(DebugConfig.TAG, "MusicSetEvent received in PlayerFragment");
+        LogHelper.i(TAG, "MusicSetEvent received in PlayerFragment");
         artistName.setText(event.myTrack.artistName);
         albumName.setText(event.myTrack.albumName);
         trackName.setText(event.myTrack.name);
@@ -209,9 +211,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
     }
 
     public void onEvent(FinishEvent event) {
-        LogHelper.i(DebugConfig.TAG, "FinishEvent received");
+        LogHelper.i(TAG, "FinishEvent received");
         if (event.isFinish) {
-            LogHelper.i(DebugConfig.TAG, "set play icon2");
+            LogHelper.i(TAG, "set play icon2");
 
             //Play Next song
             //playPause.setBackgroundResource(android.R.drawable.ic_media_play);
@@ -232,9 +234,9 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         ButterKnife.inject(this, view);
 
         if(savedInstanceState!=null){
-            LogHelper.i(DebugConfig.TAG, "get data back from bundle playerfragment");
+            LogHelper.i(TAG, "get data back from bundle playerfragment");
             mCurrentTrack = savedInstanceState.getParcelable("mytrack");
-            //LogHelper.i(DebugConfig.TAG, "mCurrentTrack trackName: "+mCurrentTrack.name);
+            //LogHelper.i(TAG, "mCurrentTrack trackName: "+mCurrentTrack.name);
             artistName.setText(mCurrentTrack.artistName);
             albumName.setText(mCurrentTrack.albumName);
             trackName.setText(mCurrentTrack.name);
@@ -257,13 +259,13 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
             @Override
             public void onClick(View v) {
 
-                LogHelper.i(DebugConfig.TAG, "mState is "+mState);
+                LogHelper.i(TAG, "mState is "+mState);
                 // check for already playing
                 if (mState == MusicService.State.Playing) {
                     playIntent.setAction(MusicService.ACTION_PAUSE);
                     getActivity().getApplicationContext().startService(playIntent);
 
-                    LogHelper.i(DebugConfig.TAG, "set play icon1");
+                    LogHelper.i(TAG, "set play icon1");
                     playPause.setBackgroundResource(android.R.drawable.ic_media_play);
 
                 }else if(mState == MusicService.State.Retriving){
@@ -372,7 +374,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
 
         int newCurrentDuration = PlayerUtils.progressToTimer(seekBar.getProgress(), totalDuration);
-        LogHelper.i(DebugConfig.TAG, "newCurrentDuration: " + newCurrentDuration);
+        LogHelper.i(TAG, "newCurrentDuration: " + newCurrentDuration);
 
         //update UI to the current scrolled position
         seekBar.setProgress(seekBar.getProgress());

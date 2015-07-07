@@ -41,6 +41,9 @@ import retrofit.client.Response;
  */
 public class SearchFragment extends Fragment {
 
+    private static final String TAG =
+            LogHelper.makeLogTag(SearchFragment.class);
+
 
     //UI components
 

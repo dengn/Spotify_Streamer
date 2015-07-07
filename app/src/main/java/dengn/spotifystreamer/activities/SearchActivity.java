@@ -24,10 +24,12 @@ import dengn.spotifystreamer.fragments.SearchFragment;
 import dengn.spotifystreamer.fragments.TracksFragment;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.services.MusicService;
-import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.LogHelper;
 
 public class SearchActivity extends AppCompatActivity {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(SearchActivity.class);
 
 
     @InjectView(R.id.toolbar)
@@ -66,7 +68,6 @@ public class SearchActivity extends AppCompatActivity {
         EventBus.getDefault().register(this);
 
 
-
         if (findViewById(R.id.tracks_main) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-large and
@@ -77,15 +78,14 @@ public class SearchActivity extends AppCompatActivity {
             // If is two pane, init a TracksFragment in the same activity
             //mTracksFragment = (TracksFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_tracks);
             if (savedInstanceState == null) {
-                LogHelper.i(DebugConfig.TAG, "recreate mTracksFragment");
+                LogHelper.i(TAG, "recreate mTracksFragment");
 
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
                 mTracksFragment = TracksFragment.newInstance("", "");
                 transaction.add(R.id.tracks_main, mTracksFragment);
                 transaction.commit();
-            }
-            else{
-                LogHelper.i(DebugConfig.TAG, "retrieve mTracksFragment");
+            } else {
+                LogHelper.i(TAG, "retrieve mTracksFragment");
                 mTracksFragment = (TracksFragment) getSupportFragmentManager().getFragment(
                         savedInstanceState, "track_fragment");
             }
@@ -99,15 +99,14 @@ public class SearchActivity extends AppCompatActivity {
         //mSearchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_search);
 
         if (savedInstanceState == null) {
-            LogHelper.i(DebugConfig.TAG, "recreate mSearchFragment");
+            LogHelper.i(TAG, "recreate mSearchFragment");
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             mSearchFragment = SearchFragment.newInstance();
             transaction.add(R.id.search_main, mSearchFragment);
             transaction.commit();
 
-        }
-        else{
-            LogHelper.i(DebugConfig.TAG, "retrieve mSearchFragment");
+        } else {
+            LogHelper.i(TAG, "retrieve mSearchFragment");
             mSearchFragment = (SearchFragment) getSupportFragmentManager().getFragment(
                     savedInstanceState, "search_fragment");
         }
@@ -118,7 +117,7 @@ public class SearchActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mState = (MusicService.State) savedInstanceState.getSerializable("state");
-            if(nowPlayingItem!=null) {
+            if (nowPlayingItem != null) {
                 switch (mState) {
                     case Playing:
                         nowPlayingItem.setVisible(true);
@@ -137,7 +136,6 @@ public class SearchActivity extends AppCompatActivity {
         }
 
 
-
     }
 
 
@@ -147,22 +145,22 @@ public class SearchActivity extends AppCompatActivity {
         //Unregister EventBus
         EventBus.getDefault().unregister(this);
 
-        LogHelper.i(DebugConfig.TAG, "Search Activity destroyed");
+        LogHelper.i(TAG, "Search Activity destroyed");
     }
 
 
     //Receive event with TrackIntent object, from Item Click in SearchFragment
     public void onEvent(TrackIntent trackIntent) {
-        LogHelper.i(DebugConfig.TAG, "track intent received in SearchActivity");
+        LogHelper.i(TAG, "track intent received in SearchActivity");
         if (mTwoPane) {
             //Two pane, refresh TrackFragment by using new data get from SearchFragment
             mArtistId = trackIntent.artistId;
             mArtistName = trackIntent.artistName;
 
-            LogHelper.i(DebugConfig.TAG, "artistId: " + mArtistId);
-            LogHelper.i(DebugConfig.TAG, "artistName: " + mArtistName);
+            LogHelper.i(TAG, "artistId: " + mArtistId);
+            LogHelper.i(TAG, "artistName: " + mArtistName);
 
-            LogHelper.i(DebugConfig.TAG, "mTracksFragment is null: " + (mTracksFragment == null));
+            LogHelper.i(TAG, "mTracksFragment is null: " + (mTracksFragment == null));
             mTracksFragment.onNewDataRefresh(mArtistId, mArtistName);
         } else {
             //Not two pane, start Tracks activity
@@ -183,7 +181,7 @@ public class SearchActivity extends AppCompatActivity {
         mTracks = playerIntent.tracks;
         position = playerIntent.position;
 
-        LogHelper.i(DebugConfig.TAG, "play intent received in SearchActivity");
+        LogHelper.i(TAG, "play intent received in SearchActivity");
         if (mTwoPane) {
 
             PlayerFragment player = PlayerFragment.newInstance();
@@ -206,7 +204,7 @@ public class SearchActivity extends AppCompatActivity {
     public void onEvent(StateEvent event) {
 
         mState = event.state;
-        if(nowPlayingItem!=null) {
+        if (nowPlayingItem != null) {
             switch (mState) {
                 case Playing:
                     nowPlayingItem.setVisible(true);
@@ -225,9 +223,9 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
-    public void onEventMainThread(TickEvent event){
+    public void onEventMainThread(TickEvent event) {
 
-        if(nowPlayingItem!=null)
+        if (nowPlayingItem != null)
             nowPlayingItem.setVisible(true);
     }
 
@@ -240,11 +238,11 @@ public class SearchActivity extends AppCompatActivity {
         //Save the fragment's instance
         // fragment instance may be null
         if (mSearchFragment != null) {
-            LogHelper.i(DebugConfig.TAG, "search fragment saved");
+            LogHelper.i(TAG, "search fragment saved");
             getSupportFragmentManager().putFragment(outState, "search_fragment", mSearchFragment);
         }
-        if(mTracksFragment!=null) {
-            LogHelper.i(DebugConfig.TAG, "tracks fragment saved");
+        if (mTracksFragment != null) {
+            LogHelper.i(TAG, "tracks fragment saved");
             getSupportFragmentManager().putFragment(outState, "track_fragment", mTracksFragment);
         }
         super.onSaveInstanceState(outState);
@@ -270,7 +268,7 @@ public class SearchActivity extends AppCompatActivity {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        }else if(id==R.id.current_music){
+        } else if (id == R.id.current_music) {
             if (mTwoPane) {
                 //Can only be from two pane situation, launch player fragment as dialog.
                 PlayerFragment player = PlayerFragment.newInstance();
@@ -280,8 +278,7 @@ public class SearchActivity extends AppCompatActivity {
                 playIntent = new Intent(this, MusicService.class);
                 playIntent.setAction(MusicService.ACTION_RESHOWN);
                 startService(playIntent);
-            }
-            else{
+            } else {
                 Intent intent = new Intent(this, PlayerActivity.class);
                 startActivity(intent);
                 playIntent = new Intent(this, MusicService.class);

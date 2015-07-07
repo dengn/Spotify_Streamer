@@ -22,7 +22,6 @@ import dengn.spotifystreamer.adapters.TracksListAdapter;
 import dengn.spotifystreamer.events.PlayerIntent;
 import dengn.spotifystreamer.listener.RecyclerItemClickListener;
 import dengn.spotifystreamer.models.MyTrack;
-import dengn.spotifystreamer.utils.DebugConfig;
 import dengn.spotifystreamer.utils.ImageUtils;
 import dengn.spotifystreamer.utils.LogHelper;
 import dengn.spotifystreamer.utils.SettingUtils;
@@ -38,6 +37,9 @@ import retrofit.client.Response;
  * A placeholder fragment containing a simple view.
  */
 public class TracksFragment extends Fragment {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(TracksFragment.class);
 
     //Ui components
     @InjectView(R.id.track_list)
@@ -73,7 +75,7 @@ public class TracksFragment extends Fragment {
     }
 
     public void onNewDataRefresh(String artistId, String artistName){
-        LogHelper.i(DebugConfig.TAG, "get new data and reload");
+        LogHelper.i(TAG, "get new data and reload");
         mArtistId = artistId;
         mArtistName = artistName;
         reload = true;
@@ -85,7 +87,7 @@ public class TracksFragment extends Fragment {
         super.onSaveInstanceState(outState);
         // Save the fragment's state here
 
-        LogHelper.d(DebugConfig.TAG, "save data to bundle");
+        LogHelper.d(TAG, "save data to bundle");
 
         if (mTracks != null) {
             outState.putParcelableArrayList("tracks", mTracks);
@@ -118,7 +120,7 @@ public class TracksFragment extends Fragment {
             mTracks = savedInstanceState.getParcelableArrayList("tracks");
             reload = false;
 
-            LogHelper.d(DebugConfig.TAG, "get data from saved bundle");
+            LogHelper.d(TAG, "get data from saved bundle");
         } else {
             reload = true;
         }
@@ -141,7 +143,7 @@ public class TracksFragment extends Fragment {
             public void onItemClick(View view, int position) {
                 if (mTracks.get(position).previewURL != null) {
 
-                    LogHelper.d(DebugConfig.TAG, "track item clicked");
+                    LogHelper.d(TAG, "track item clicked");
                     //Send event with playIntent back to activity
                     EventBus.getDefault().post(new PlayerIntent(mTracks, position));
 

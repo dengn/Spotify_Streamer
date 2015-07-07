@@ -16,8 +16,12 @@ import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.fragments.PlayerFragment;
 import dengn.spotifystreamer.models.MyTrack;
 import dengn.spotifystreamer.services.MusicService;
+import dengn.spotifystreamer.utils.LogHelper;
 
 public class PlayerActivity extends AppCompatActivity {
+
+    private static final String TAG =
+            LogHelper.makeLogTag(PlayerActivity.class);
 
     @InjectView(R.id.toolbar)
     Toolbar playerToolbar;
