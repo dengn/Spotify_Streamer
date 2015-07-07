@@ -1,7 +1,11 @@
 package dengn.spotifystreamer.activities;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +20,6 @@ import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import dengn.spotifystreamer.R;
 import dengn.spotifystreamer.events.PlayerIntent;
-import dengn.spotifystreamer.events.StateEvent;
 import dengn.spotifystreamer.events.TickEvent;
 import dengn.spotifystreamer.events.TrackIntent;
 import dengn.spotifystreamer.fragments.PlayerFragment;
@@ -57,6 +60,29 @@ public class SearchActivity extends AppCompatActivity {
 
     private MusicService.State mState;
 
+    private MusicService musicService;
+
+
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+
+            LogHelper.i(TAG, "service bound");
+            //get service
+            musicService = binder.getService();
+
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +92,9 @@ public class SearchActivity extends AppCompatActivity {
 
         //Register EventBus
         EventBus.getDefault().register(this);
+
+        Intent intent = new Intent(this, MusicService.class);
+        bindService(intent, musicConnection, Context.BIND_AUTO_CREATE);
 
 
         if (findViewById(R.id.tracks_main) != null) {
@@ -115,25 +144,25 @@ public class SearchActivity extends AppCompatActivity {
         setSupportActionBar(searchToolbar);
 
 
-        if (savedInstanceState != null) {
-            mState = (MusicService.State) savedInstanceState.getSerializable("state");
-            if (nowPlayingItem != null) {
-                switch (mState) {
-                    case Playing:
-                        nowPlayingItem.setVisible(true);
-                        break;
-                    case Paused:
-                        nowPlayingItem.setVisible(true);
-                        break;
-                    case Prepared:
-                        nowPlayingItem.setVisible(true);
-                        break;
-                    case Retriving:
-                        nowPlayingItem.setVisible(false);
-                        break;
-                }
-            }
-        }
+//        if (savedInstanceState != null) {
+//            mState = (MusicService.State) savedInstanceState.getSerializable("state");
+//            if (nowPlayingItem != null) {
+//                switch (mState) {
+//                    case Playing:
+//                        nowPlayingItem.setVisible(true);
+//                        break;
+//                    case Paused:
+//                        nowPlayingItem.setVisible(true);
+//                        break;
+//                    case Prepared:
+//                        nowPlayingItem.setVisible(true);
+//                        break;
+//                    case Retriving:
+//                        nowPlayingItem.setVisible(false);
+//                        break;
+//                }
+//            }
+//        }
 
 
     }
@@ -144,6 +173,8 @@ public class SearchActivity extends AppCompatActivity {
         super.onDestroy();
         //Unregister EventBus
         EventBus.getDefault().unregister(this);
+
+        unbindService(musicConnection);
 
         LogHelper.i(TAG, "Search Activity destroyed");
     }
@@ -199,29 +230,33 @@ public class SearchActivity extends AppCompatActivity {
 
 
         }
-    }
-
-    public void onEvent(StateEvent event) {
-
-        mState = event.state;
-        if (nowPlayingItem != null) {
-            switch (mState) {
-                case Playing:
-                    nowPlayingItem.setVisible(true);
-                    break;
-                case Paused:
-                    nowPlayingItem.setVisible(true);
-                    break;
-                case Prepared:
-                    nowPlayingItem.setVisible(true);
-                    break;
-                case Retriving:
-                    nowPlayingItem.setVisible(false);
-                    break;
-            }
+        else{
+            playIntent = new Intent(this, MusicService.class);
+            this.startService(playIntent);
         }
-
     }
+
+//    public void onEvent(StateEvent event) {
+//
+//        mState = event.state;
+//        if (nowPlayingItem != null) {
+//            switch (mState) {
+//                case Playing:
+//                    nowPlayingItem.setVisible(true);
+//                    break;
+//                case Paused:
+//                    nowPlayingItem.setVisible(true);
+//                    break;
+//                case Prepared:
+//                    nowPlayingItem.setVisible(true);
+//                    break;
+//                case Retriving:
+//                    nowPlayingItem.setVisible(false);
+//                    break;
+//            }
+//        }
+//
+//    }
 
     public void onEventMainThread(TickEvent event) {
 
@@ -233,7 +268,7 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
 
-        outState.putSerializable("state", mState);
+        //outState.putSerializable("state", mState);
 
         //Save the fragment's instance
         // fragment instance may be null
@@ -253,6 +288,20 @@ public class SearchActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_search, menu);
         nowPlayingItem = menu.findItem(R.id.current_music);
+        switch (musicService.getCurrentState()) {
+                case Playing:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Paused:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Prepared:
+                    nowPlayingItem.setVisible(true);
+                    break;
+                case Retriving:
+                    nowPlayingItem.setVisible(false);
+                    break;
+            }
         return true;
     }
 

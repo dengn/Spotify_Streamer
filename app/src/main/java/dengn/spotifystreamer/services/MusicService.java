@@ -90,7 +90,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
         String action = intent.getAction();
 
-        if (intent.getParcelableArrayListExtra("tracks") != null){
+        if (intent.getParcelableArrayListExtra("tracks") != null) {
 
             mTracks = intent.getParcelableArrayListExtra("tracks");
             if (position != intent.getIntExtra("position", 0)) {
@@ -117,19 +117,21 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
 
 
+        if (action != null) {
 
+            if (action.equals(ACTION_PLAY)) processPlay();
+            else if (action.equals(ACTION_PAUSE)) processPause();
+            else if (action.equals(ACTION_NEXT)) processNext();
+            else if (action.equals(ACTION_PREVIOUS)) processPrevious();
+            else if (action.equals(ACTION_FORWARD)) processForward();
+            else if (action.equals(ACTION_BACKWARD)) processBackward();
+            else if (action.equals(ACTION_RESHOWN)) {
+                EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
+            } else if (action.equals(ACTION_SET_POSITION)) {
+                int currentPosition = intent.getIntExtra("newCurrentPosition", 0);
+                processSetPosition(currentPosition);
+            }
 
-        if (action.equals(ACTION_PLAY)) processPlay();
-        else if (action.equals(ACTION_PAUSE)) processPause();
-        else if (action.equals(ACTION_NEXT)) processNext();
-        else if (action.equals(ACTION_PREVIOUS)) processPrevious();
-        else if (action.equals(ACTION_FORWARD)) processForward();
-        else if (action.equals(ACTION_BACKWARD)) processBackward();
-        else if (action.equals(ACTION_RESHOWN)) {
-            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
-        } else if (action.equals(ACTION_SET_POSITION)) {
-            int currentPosition = intent.getIntExtra("newCurrentPosition", 0);
-            processSetPosition(currentPosition);
         }
 
 
@@ -273,7 +275,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
+    }
+
+    public State getCurrentState() {
+        return mState;
     }
 
     //release resources when unbind
@@ -364,6 +370,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        LogHelper.i(TAG, "music error");
         mState = State.Retriving;
         stopTicking();
         EventBus.getDefault().post(new FinishEvent(true));
