@@ -1,13 +1,22 @@
 package dengn.spotifystreamer.services;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.view.View;
+import android.widget.RemoteViews;
+
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +24,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import de.greenrobot.event.EventBus;
+import dengn.spotifystreamer.R;
+import dengn.spotifystreamer.activities.SearchActivity;
 import dengn.spotifystreamer.events.FinishEvent;
 import dengn.spotifystreamer.events.MusicSetEvent;
 import dengn.spotifystreamer.events.StateEvent;
@@ -33,6 +44,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private static final int seekBackwardTime = 1000;
     private static final int seekForwardTime = 1000;
 
+
+    public static final int NOTIFICATION_ID = 3000;
 
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final String ACTION_PAUSE = "ACTION_PAUSE";
@@ -314,6 +327,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void play() {
         LogHelper.i(TAG, "play called");
 
+        //showNotificationUsingCustomLayout();
+
         if (mPlayer != null)
             mPlayer.start();
         startTicking();
@@ -323,6 +338,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private void pause() {
         LogHelper.i(TAG, "pause called");
+
+        //showNotificationUsingCustomLayout();
+
         if (mPlayer.isPlaying() && mPlayer != null)
             mPlayer.pause();
         stopTicking();
@@ -382,5 +400,98 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         public MusicService getService() {
             return MusicService.this;
         }
+    }
+
+
+    /**
+     * Notifications
+     */
+    private void showNotificationUsingCustomLayout() {
+
+        //New Remote View
+        RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notification_playback);
+        remoteView.setTextViewText(R.id.track_name, mTracks.get(position).name);
+        remoteView.setTextViewText(R.id.artist_name, mTracks.get(position).artistName);
+
+        //Playback controls
+        //Previous Track Intent
+
+        Intent playPreviousTrackIntent = new Intent(this, MusicService.class);
+        playPreviousTrackIntent.setAction(ACTION_PREVIOUS);
+
+        remoteView.setOnClickPendingIntent(
+                R.id.play_previous_track,
+                PendingIntent.getService(this, 0, playPreviousTrackIntent, 0)
+        );
+
+
+        Intent pauseTrackIntent = new Intent(this, MusicService.class);
+        pauseTrackIntent.setAction(ACTION_PAUSE);
+        Intent resumeTrackIntent = new Intent(this, MusicService.class);
+        resumeTrackIntent.setAction(ACTION_PLAY);
+        //Resume/Pause
+        remoteView.setViewVisibility(R.id.pause_track, View.VISIBLE);
+        remoteView.setViewVisibility(R.id.resume_track, View.VISIBLE);
+        if(mPlayer != null && mPlayer.isPlaying()) {
+            remoteView.setViewVisibility(R.id.resume_track, View.GONE);
+            remoteView.setOnClickPendingIntent(
+                    R.id.pause_track,
+                    PendingIntent.getService(this, 0, pauseTrackIntent, 0)
+            );
+        }
+        else {
+            remoteView.setViewVisibility(R.id.pause_track, View.GONE);
+            remoteView.setOnClickPendingIntent(
+                    R.id.resume_track,
+                    PendingIntent.getService(this, 0, resumeTrackIntent, 0)
+            );
+        }
+
+
+        Intent nextTrackIntent = new Intent(this, MusicService.class);
+        nextTrackIntent.setAction(ACTION_NEXT);
+        //Next Track Intent
+        remoteView.setOnClickPendingIntent(
+                R.id.play_next_track,
+                PendingIntent.getService(this, 0, nextTrackIntent, 0)
+        );
+
+        //Content action
+        //Show App Intent
+        Intent showAppIntent = new Intent(this, SearchActivity.class);
+        showAppIntent.setAction(Intent.ACTION_MAIN);
+        showAppIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        PendingIntent showAppPendingIntent = PendingIntent.getActivity(this, 0, showAppIntent, 0);
+
+        //Prepare notification
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(android.R.drawable.ic_media_play)
+                .setContent(remoteView)
+                .setContentIntent(showAppPendingIntent);
+
+        //Check if ongoing notification
+        notificationBuilder.setOngoing(mPlayer != null && mPlayer.isPlaying());
+
+        //Show playback controls in lockscreen
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//        boolean showPlaybackControlsInLockScreen = sharedPreferences.getBoolean(PREF_SHOW_PLAYBACK_CONTROLS_IN_LOCKSCREEN, true);
+        boolean showPlaybackControlsInLockScreen = true;
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH && showPlaybackControlsInLockScreen) {
+            notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+        }
+
+        //Display notification
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        Notification notification = notificationBuilder.build();
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
+        //Thumbnail
+//        String thumbnailUrl = Utils.getThumbnailUrl(mCurrentTrack.album.images, 0);
+//        if(thumbnailUrl != null)
+//            Picasso.with(this).load(thumbnailUrl).into(remoteView, R.id.album_thumbnail, NOTIFICATION_ID, notification);
+        Picasso.with(this)
+                .load(mTracks.get(position).imageSmallURL)
+                .into(remoteView, R.id.album_thumbnail, NOTIFICATION_ID, notification);
+
     }
 }
