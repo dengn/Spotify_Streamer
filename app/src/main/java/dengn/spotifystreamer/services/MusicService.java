@@ -175,23 +175,16 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             case Paused:
                 play();
                 break;
-
         }
-
-
     }
 
     private void processPause() {
 
         switch (mState) {
-
             case Playing:
                 pause();
                 break;
-
         }
-
-
     }
 
     private void processNext() {

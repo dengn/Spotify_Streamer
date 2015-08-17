@@ -173,7 +173,7 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
 
         LogHelper.d(TAG, "TickEvent received");
 
-        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+        //playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
 
         mState = MusicService.State.Playing;
 
@@ -202,11 +202,26 @@ public class PlayerFragment extends DialogFragment implements SeekBar.OnSeekBarC
         albumName.setText(event.myTrack.albumName);
         trackName.setText(event.myTrack.name);
         Picasso.with(getActivity()).load(event.myTrack.imageLargeURL).into(albumImage);
+        playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+
     }
 
     public void onEvent(StateEvent event) {
 
         mState = event.state;
+        switch (mState){
+            case Retriving:
+                playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+                break;
+            case Prepared:
+                playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+                break;
+            case Playing:
+                playPause.setBackgroundResource(android.R.drawable.ic_media_pause);
+                break;
+            case Paused:
+                playPause.setBackgroundResource(android.R.drawable.ic_media_play);
+        }
 
     }
 
