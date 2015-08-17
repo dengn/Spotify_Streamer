@@ -13,4 +13,12 @@
         android:title="@string/menu_current_music"
         app:showAsAction="ifRoom"
         android:visible="false"/>
+    <item
+        android:id="@+id/share_music"
+        app:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="@string/menu_share_music"
+        android:visible="false"
+        android:actionProviderClass=
+            "android.widget.ShareActionProvider" />
 </menu>

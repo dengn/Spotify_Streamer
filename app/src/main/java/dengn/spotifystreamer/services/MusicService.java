@@ -139,7 +139,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         else if (action.equals(ACTION_FORWARD)) processForward();
         else if (action.equals(ACTION_BACKWARD)) processBackward();
         else if (action.equals(ACTION_RESHOWN)) {
-            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
+            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position), mState));
         } else if (action.equals(ACTION_SET_POSITION)) {
             int currentPosition = intent.getIntExtra("newCurrentPosition", 0);
             processSetPosition(currentPosition);
@@ -302,7 +302,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
             mPlayer.reset();
             mPlayer.setDataSource(mTracks.get(position).previewURL);
-            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position)));
+            EventBus.getDefault().post(new MusicSetEvent(mTracks.get(position), mState));
             LogHelper.i(TAG, "set music event fired ");
 
             //We are streaming online music, it should be asynchronous, otherwise it will take too much time on the UI thread
@@ -320,7 +320,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void play() {
         LogHelper.i(TAG, "play called");
 
-        //showNotificationUsingCustomLayout();
+        showNotificationUsingCustomLayout();
 
         if (mPlayer != null)
             mPlayer.start();
@@ -332,7 +332,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void pause() {
         LogHelper.i(TAG, "pause called");
 
-        //showNotificationUsingCustomLayout();
+        showNotificationUsingCustomLayout();
 
         if (mPlayer.isPlaying() && mPlayer != null)
             mPlayer.pause();
@@ -425,18 +425,20 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         //Resume/Pause
         remoteView.setViewVisibility(R.id.pause_track, View.VISIBLE);
         remoteView.setViewVisibility(R.id.resume_track, View.VISIBLE);
-        if(mPlayer != null && mPlayer.isPlaying()) {
-            remoteView.setViewVisibility(R.id.resume_track, View.GONE);
-            remoteView.setOnClickPendingIntent(
-                    R.id.pause_track,
-                    PendingIntent.getService(this, 0, pauseTrackIntent, 0)
-            );
-        }
-        else {
+
+        if(mState == State.Playing) {
             remoteView.setViewVisibility(R.id.pause_track, View.GONE);
             remoteView.setOnClickPendingIntent(
                     R.id.resume_track,
                     PendingIntent.getService(this, 0, resumeTrackIntent, 0)
+            );
+
+        }
+        else {
+            remoteView.setViewVisibility(R.id.resume_track, View.GONE);
+            remoteView.setOnClickPendingIntent(
+                    R.id.pause_track,
+                    PendingIntent.getService(this, 0, pauseTrackIntent, 0)
             );
         }
 
@@ -463,8 +465,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 .setContentIntent(showAppPendingIntent);
 
         //Check if ongoing notification
-        notificationBuilder.setOngoing(mPlayer != null && mPlayer.isPlaying());
-
+        //notificationBuilder.setOngoing(mPlayer != null && mPlayer.isPlaying());
+        if(mState==State.Playing)
+            notificationBuilder.setOngoing(false);
+        else
+            notificationBuilder.setOngoing(true);
         //Show playback controls in lockscreen
 //        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 //        boolean showPlaybackControlsInLockScreen = sharedPreferences.getBoolean(PREF_SHOW_PLAYBACK_CONTROLS_IN_LOCKSCREEN, true);

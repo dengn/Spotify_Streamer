@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ShareActionProvider;
 
 import java.util.ArrayList;
 
@@ -52,6 +54,7 @@ public class SearchActivity extends AppCompatActivity {
     private boolean mTwoPane;
 
     private MenuItem nowPlayingItem;
+    private MenuItem shareMusicItem;
 
     private Intent playIntent;
 
@@ -117,19 +120,23 @@ public class SearchActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mState = (MusicService.State) savedInstanceState.getSerializable("state");
-            if (nowPlayingItem != null) {
+            if (nowPlayingItem != null && shareMusicItem!=null) {
                 switch (mState) {
                     case Playing:
                         nowPlayingItem.setVisible(true);
+                        shareMusicItem.setVisible(true);
                         break;
                     case Paused:
                         nowPlayingItem.setVisible(true);
+                        shareMusicItem.setVisible(true);
                         break;
                     case Prepared:
                         nowPlayingItem.setVisible(true);
+                        shareMusicItem.setVisible(true);
                         break;
                     case Retriving:
                         nowPlayingItem.setVisible(false);
+                        shareMusicItem.setVisible(false);
                         break;
                 }
             }
@@ -204,19 +211,23 @@ public class SearchActivity extends AppCompatActivity {
     public void onEvent(StateEvent event) {
 
         mState = event.state;
-        if (nowPlayingItem != null) {
+        if (nowPlayingItem != null && shareMusicItem!=null) {
             switch (mState) {
                 case Playing:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Paused:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Prepared:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Retriving:
                     nowPlayingItem.setVisible(false);
+                    shareMusicItem.setVisible(false);
                     break;
             }
         }
@@ -225,8 +236,10 @@ public class SearchActivity extends AppCompatActivity {
 
     public void onEventMainThread(TickEvent event) {
 
-        if (nowPlayingItem != null)
+        if (nowPlayingItem != null && shareMusicItem!=null) {
             nowPlayingItem.setVisible(true);
+            shareMusicItem.setVisible(true);
+        }
     }
 
 
@@ -253,6 +266,7 @@ public class SearchActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_search, menu);
         nowPlayingItem = menu.findItem(R.id.current_music);
+        shareMusicItem = menu.findItem(R.id.share_music);
         return true;
     }
 
@@ -286,6 +300,15 @@ public class SearchActivity extends AppCompatActivity {
                 startService(playIntent);
             }
             return true;
+        } else if(id == R.id.share_music){
+
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, mTracks.get(position).previewURL);
+            shareIntent.setType("text/plain");
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_using)));
+
+
         }
 
         return super.onOptionsItemSelected(item);

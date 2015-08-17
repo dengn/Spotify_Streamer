@@ -40,6 +40,7 @@ public class TracksActivity extends AppCompatActivity {
     private int position = 0;
 
     private MenuItem nowPlayingItem;
+    private MenuItem shareMusicItem;
 
     private MusicService.State mState;
 
@@ -106,19 +107,23 @@ public class TracksActivity extends AppCompatActivity {
     public void onEvent(StateEvent event) {
 
         mState = event.state;
-        if (nowPlayingItem != null) {
+        if (nowPlayingItem != null && shareMusicItem!=null) {
             switch (mState) {
                 case Playing:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Paused:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Prepared:
                     nowPlayingItem.setVisible(true);
+                    shareMusicItem.setVisible(true);
                     break;
                 case Retriving:
                     nowPlayingItem.setVisible(false);
+                    shareMusicItem.setVisible(false);
                     break;
             }
         }
@@ -127,8 +132,10 @@ public class TracksActivity extends AppCompatActivity {
 
     public void onEventMainThread(TickEvent event) {
 
-        if (nowPlayingItem != null)
+        if (nowPlayingItem != null && shareMusicItem!=null) {
             nowPlayingItem.setVisible(true);
+            shareMusicItem.setVisible(true);
+        }
     }
 
 
@@ -148,6 +155,7 @@ public class TracksActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_search, menu);
         nowPlayingItem = menu.findItem(R.id.current_music);
+        shareMusicItem = menu.findItem(R.id.share_music);
         return true;
     }
 
@@ -174,11 +182,20 @@ public class TracksActivity extends AppCompatActivity {
             //not two pane, launch PlayFragment in a new activity
             Intent intent = new Intent(this, PlayerActivity.class);
             startActivity(intent);
-
-
             return true;
 
         }
+        else if(id == R.id.share_music){
+
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, mTracks.get(position).previewURL);
+            shareIntent.setType("text/plain");
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_using)));
+
+
+        }
+
 
         return super.onOptionsItemSelected(item);
     }
